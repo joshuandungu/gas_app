@@ -1,0 +1,65 @@
+name: gas
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.5
+  firebase_core: ^4.0.0
+  firebase_auth: ^6.0.0
+  cloud_firestore: ^6.0.0
+  firebase_storage: ^13.0.0
+  firebase_messaging: ^16.0.0
+  firebase_analytics: ^12.0.0
+  firebase_crashlytics: ^5.0.0
+  firebase_remote_config: ^6.0.0
+  firebase_core_web: ^3.0.0
+  firebase_app_check: ^0.4.0
+  http: ^1.2.1
+  google_maps_flutter: ^2.0.0
+  geolocator: ^11.0.0
+  shared_preferences: ^2.0.0
+  flutter_local_notifications: ^19.4.0
+  url_launcher: ^6.3.2
+  image_picker: ^1.1.2
+  share_plus: ^11.1.0
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  carousel_slider: ^5.1.1
+  pdf: ^3.11.3
+  printing: ^5.14.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  generate: true
+  uses-material-design: true
+  # assets:
+  #   - images/
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+
+# ✅ Correct placement: l10n settings are at ROOT level, NOT inside flutter:
+flutter_intl:
+  enabled: true
+
+l10n:
+  arb-dir: lib\l10n
+  template-arb-file: app_en.arb
+  output-localization-file: app_localizations.dart

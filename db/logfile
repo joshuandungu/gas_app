@@ -1,0 +1,8 @@
+2025-08-06 05:38:49.978 EDT [103514] LOG:  starting PostgreSQL 17.5 (Debian 17.5-1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2025-08-06 05:38:49.985 EDT [103514] LOG:  could not bind IPv6 address "::1": Address already in use
+2025-08-06 05:38:49.985 EDT [103514] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2025-08-06 05:38:49.986 EDT [103514] LOG:  could not bind IPv4 address "127.0.0.1": Address already in use
+2025-08-06 05:38:49.986 EDT [103514] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2025-08-06 05:38:49.986 EDT [103514] WARNING:  could not create listen socket for "localhost"
+2025-08-06 05:38:49.999 EDT [103514] FATAL:  could not create any TCP/IP sockets
+2025-08-06 05:38:50.002 EDT [103514] LOG:  database system is shut down

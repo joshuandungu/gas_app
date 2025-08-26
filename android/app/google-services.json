@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "154405777224",
+    "project_id": "gasapp-3ed4f",
+    "storage_bucket": "gasapp-3ed4f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:154405777224:android:4b43be4763f05fa67f4d7d",
+        "android_client_info": {
+          "package_name": "com.example.gas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQbBVNU0tsqAxBbAfRoISB8cJvncv5XTQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
