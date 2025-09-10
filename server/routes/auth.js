@@ -4,6 +4,7 @@ const authRouter = express.Router();
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const auth = require("../middlewares/auth");
+const config = require("../config/config.js");
 
 // SIGN UP
 authRouter.post("/api/signup", async (req, res) => {
@@ -46,7 +47,7 @@ authRouter.post("/api/signin", async (req, res) => {
         if (!isMatch) {
             return res.status(400).json({ msg: "Incorrect password!" });
         }
-        const token = jwt.sign({ id: user._id }, "passwordKey");
+        const token = jwt.sign({ id: user._id }, config.JWT_SECRET);
         res.json({ token, ...user._doc });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -58,7 +59,7 @@ authRouter.post("/tokenIsValid", async (req, res) => {
     try {
         const token = req.header("x-auth-token");
         if (!token) return res.json(false);
-        const verified = jwt.verify(token, "passwordKey");
+        const verified = jwt.verify(token, config.JWT_SECRET);
         if (!verified) return res.json(false);
         const user = await User.findById(verified.id);
         if (!user) return res.json(false);
@@ -86,7 +87,7 @@ authRouter.post("/api/reset-password", async (req, res) => {
 
         const resetToken = jwt.sign(
             { id: user._id },
-            "passwordResetKey",
+            config.JWT_RESET_SECRET,
             { expiresIn: '1h' }
         );
 
@@ -104,7 +105,7 @@ authRouter.post("/api/update-password", async (req, res) => {
             return res.status(400).json({ msg: "Password must be at least 6 characters" });
         }
 
-        const verified = jwt.verify(resetToken, "passwordResetKey");
+        const verified = jwt.verify(resetToken, config.JWT_RESET_SECRET);
         if (!verified) {
             return res.status(400).json({ msg: "Invalid or expired reset token" });
         }

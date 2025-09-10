@@ -1,7 +1,10 @@
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/bottom_bar.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/analytics_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/chat/services/chat_service.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_chat_list_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/orders_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/products_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/shop_profile_screen.dart';
@@ -9,6 +12,7 @@ import 'package:ecommerce_app_fluterr_nodejs/features/seller/services/seller_ser
 import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:badges/badges.dart' as badges;
 import 'package:provider/provider.dart';
 
 class SellerScreen extends StatefulWidget {
@@ -24,11 +28,14 @@ class _SellerScreenState extends State<SellerScreen> {
   double bottomBarWidth = 42;
   double bottomBarBorderWidth = 5;
   final SellerServices sellerServices = SellerServices();
+  final ChatService _chatService = ChatService();
+  int _totalUnreadMessages = 0;
   User? shopOwner;
   List<Widget> pages = [
     const ProductsScreen(),
     const AnalyticsScreen(),
     const OrdersScreen(),
+    const SellerChatListScreen(),
   ];
   void updatePage(int page) {
     setState(() {
@@ -40,6 +47,14 @@ class _SellerScreenState extends State<SellerScreen> {
   void initState() {
     super.initState();
     fetchData();
+    _fetchUnreadCount();
+  }
+
+  void _fetchUnreadCount() async {
+    int count = await _chatService.getTotalUnreadMessages(context);
+    if (mounted) {
+      setState(() => _totalUnreadMessages = count);
+    }
   }
 
   fetchData() async {
@@ -97,10 +112,15 @@ class _SellerScreenState extends State<SellerScreen> {
                           Navigator.pushNamedAndRemoveUntil(
                             context,
                             BottomBar.routeName,
-                            (route) => false,
+                            (route) =>
+                                false, // This will show the home screen (index 0) by default
                           );
                         } else if (value == 'logout') {
-                          AccountServices().logOut(context);
+                          AccountServices().logOut(
+                            context,
+                            logoutRedirectRouteName:
+                                SellerLoginScreen.routeName,
+                          );
                         }
                       },
                       itemBuilder: (context) => [
@@ -194,6 +214,33 @@ class _SellerScreenState extends State<SellerScreen> {
                       ),
                     ),
                     child: const Icon(Icons.all_inbox_outlined),
+                  ),
+                  label: '',
+                ),
+                // CHATS
+                BottomNavigationBarItem(
+                  icon: Container(
+                    width: bottomBarWidth,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: _page == 3
+                              ? GlobalVariables.selectedNavBarColor
+                              : GlobalVariables.backgroundColor,
+                          width: bottomBarBorderWidth,
+                        ),
+                      ),
+                    ),
+                    child: badges.Badge(
+                      showBadge: _totalUnreadMessages > 0,
+                      badgeContent: Text(_totalUnreadMessages.toString()),
+                      badgeStyle: const badges.BadgeStyle(
+                        elevation: 0,
+                        badgeColor: Colors.red,
+                      ),
+                      position: badges.BadgePosition.topEnd(top: -12, end: -12),
+                      child: const Icon(Icons.chat_bubble_outline),
+                    ),
                   ),
                   label: '',
                 ),

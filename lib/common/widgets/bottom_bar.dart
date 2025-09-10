@@ -1,6 +1,8 @@
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/account_screen.dart';
 
+import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_list_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/chat/services/chat_service.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/cart/screens/cart_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/home/screens/home_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
@@ -20,15 +22,38 @@ class _BottomBarState extends State<BottomBar> {
   int _page = 0;
   double bottomBarWidth = 42;
   double bottomBarBorderWidth = 5;
+  int _totalUnreadMessages = 0;
+  final ChatService _chatService = ChatService();
   List<Widget> pages = [
     const HomeScreen(),
-    const AccountScreen(),
     const CartScreen(),
+    const ChatListScreen(),
+    const AccountScreen(),
   ];
   void updatePage(int page) {
     setState(() {
       _page = page;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUnreadCount();
+    // Listen for chat updates to refresh the total unread count
+    _chatService.connect(context);
+    _chatService.listenForChatListUpdates(() {
+      if (mounted) {
+        _fetchUnreadCount();
+      }
+    });
+  }
+
+  void _fetchUnreadCount() async {
+    int count = await _chatService.getTotalUnreadMessages(context);
+    if (mounted) {
+      setState(() => _totalUnreadMessages = count);
+    }
   }
 
   @override
@@ -61,6 +86,7 @@ class _BottomBarState extends State<BottomBar> {
             ),
             label: '',
           ),
+          // CART
           BottomNavigationBarItem(
             icon: Container(
               width: bottomBarWidth,
@@ -74,7 +100,14 @@ class _BottomBarState extends State<BottomBar> {
                   ),
                 ),
               ),
-              child: const Icon(Icons.person_outline_outlined),
+              child: badges.Badge(
+                badgeContent: Text(userCartLen.toString()),
+                badgeStyle: const badges.BadgeStyle(
+                  elevation: 0,
+                  badgeColor: Colors.white,
+                ),
+                child: const Icon(Icons.shopping_cart_outlined),
+              ),
             ),
             label: '',
           ),
@@ -84,7 +117,7 @@ class _BottomBarState extends State<BottomBar> {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                    color: _page == 2
+                    color: _page == 3
                         ? GlobalVariables.selectedNavBarColor
                         : GlobalVariables.backgroundColor,
                     width: bottomBarBorderWidth,
@@ -92,9 +125,33 @@ class _BottomBarState extends State<BottomBar> {
                 ),
               ),
               child: badges.Badge(
-                badgeContent: Text(userCartLen.toString()),
-                child: const Icon(Icons.shopping_cart_outlined),
+                showBadge: _totalUnreadMessages > 0,
+                badgeContent: Text(_totalUnreadMessages.toString()),
+                badgeStyle: const badges.BadgeStyle(
+                  elevation: 0,
+                  badgeColor: Colors.red,
+                ),
+                position: badges.BadgePosition.topEnd(top: -12, end: -12),
+                child: const Icon(Icons.chat_bubble_outline),
               ),
+            ),
+            label: '',
+          ),
+          // ACCOUNT
+          BottomNavigationBarItem(
+            icon: Container(
+              width: bottomBarWidth,
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: _page == 3
+                        ? GlobalVariables.selectedNavBarColor
+                        : GlobalVariables.backgroundColor,
+                    width: bottomBarBorderWidth,
+                  ),
+                ),
+              ),
+              child: const Icon(Icons.person_outline_outlined),
             ),
             label: '',
           ),

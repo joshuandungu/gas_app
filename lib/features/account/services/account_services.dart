@@ -6,7 +6,6 @@ import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/auth_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/notification.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';
-import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -46,10 +45,8 @@ class AccountServices {
     return orderList;
   }
 
-  
-
   // log out
-  void logOut(BuildContext context) async {
+  void logOut(BuildContext context, {required String logoutRedirectRouteName}) async {
     try {
       SharedPreferences sharedPreferences =
           await SharedPreferences.getInstance();
@@ -61,8 +58,8 @@ class AccountServices {
     }
   }
 
-
-  Future<List<Notification_Model>> fetchNotifications(BuildContext context) async {
+  Future<List<Notification_Model>> fetchNotifications(
+      BuildContext context) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     List<Notification_Model> notifications = [];
     try {
@@ -140,7 +137,8 @@ class AccountServices {
     }
   }
 
-  Future<void> deleteNotification(BuildContext context, String notificationId) async {
+  Future<void> deleteNotification(
+      BuildContext context, String notificationId) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
       http.Response res = await http.delete(

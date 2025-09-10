@@ -20,6 +20,7 @@ class AuthService {
     required String password,
     required String name,
     required String role,
+    Function(User)? onSuccess,
   }) async {
     try {
       http.Response res = await http.post(
@@ -39,7 +40,11 @@ class AuthService {
         response: res,
         context: context,
         onSuccess: () {
-          showSnackBar(context, 'Account has been successfully created!');
+          if (onSuccess != null) {
+            onSuccess(User.fromJson(res.body));
+          } else {
+            showSnackBar(context, 'Account has been successfully created!');
+          }
         },
       );
     } catch (e) {

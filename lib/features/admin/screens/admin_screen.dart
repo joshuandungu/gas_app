@@ -54,7 +54,8 @@ class _AdminScreenState extends State<AdminScreen> {
                 icon: const Icon(Icons.menu_rounded),
                 onSelected: (value) {
                   if (value == 'logout') {
-                    AccountServices().logOut(context);
+                    AccountServices().logOut(context,
+                        logoutRedirectRouteName: 'AdminLoginScreen');
                   }
                 },
                 itemBuilder: (context) => [

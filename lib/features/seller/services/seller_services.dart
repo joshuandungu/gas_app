@@ -23,8 +23,8 @@ class SellerServices {
     required String shopDescription,
     required String address,
     required dynamic avatar,
+    required String userId,
   }) async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
     String status = '';
     try {
       // Upload avatar to cloudinary
@@ -52,11 +52,11 @@ class SellerServices {
         Uri.parse('$uri/api/register-seller'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
-          'x-auth-token': userProvider.user.token,
         },
         body: jsonEncode({
           'shopName': shopName,
           'shopDescription': shopDescription,
+          'userId': userId,
           'address': address,
           'avatarUrl': avatarRes.secureUrl,
         }),
@@ -71,6 +71,7 @@ class SellerServices {
             context,
             'Seller registration request sent successfully!',
           );
+          Navigator.pop(context); // Go back to login after successful request
         },
       );
     } catch (e) {

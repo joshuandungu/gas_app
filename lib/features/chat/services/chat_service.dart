@@ -36,22 +36,30 @@ class ChatService {
   }
 
   void sendMessage({
-    required String chatId,
     required String chatRoomId,
     required String text,
     required String senderId,
+    required String receiverId,
+    String? tempId,
   }) {
     _socket?.emit('sendMessage', {
-      'chatId': chatId,
       'chatRoomId': chatRoomId,
       'text': text,
       'senderId': senderId,
+      'receiverId': receiverId,
+      'tempId': tempId,
     });
   }
 
   void listenForMessages(Function(Message) onMessageReceived) {
     _socket?.on('receiveMessage', (data) {
       onMessageReceived(Message.fromMap(data));
+    });
+  }
+
+  void listenForChatListUpdates(Function onUpdate) {
+    _socket?.on('newChatUpdate', (data) {
+      onUpdate();
     });
   }
 
@@ -85,8 +93,78 @@ class ChatService {
   }
 
   Future<List<ChatRoom>> getMyChats(BuildContext context) async {
-    // Implementation for getting all chats
-    return [];
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<ChatRoom> chatRooms = [];
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/api/chat/my-chats'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+          response: res,
+          context: context,
+          onSuccess: () {
+            for (var item in jsonDecode(res.body)) {
+              chatRooms.add(ChatRoom.fromMap(item));
+            }
+          });
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return chatRooms;
+  }
+
+  Future<int> getTotalUnreadMessages(BuildContext context) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    int totalUnread = 0;
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/api/chat/total-unread'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          totalUnread = jsonDecode(res.body)['totalUnread'] ?? 0;
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return totalUnread;
+  }
+
+  Future<void> deleteChat({
+    required BuildContext context,
+    required String chatRoomId,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    try {
+      http.Response res = await http.delete(
+        Uri.parse('$uri/api/chat/delete/$chatRoomId'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {},
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
   }
 
   Future<List<Message>> getChatMessages({
@@ -98,7 +176,10 @@ class ChatService {
     try {
       http.Response res = await http.get(
         Uri.parse('$uri/api/chat/messages/$chatRoomId'),
-        headers: {'x-auth-token': userProvider.user.token},
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token
+        },
       );
       httpErrorHandle(
           response: res,

@@ -2,6 +2,7 @@ import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/seller_reg
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/widgets/account_button.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/set_address.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/sellers_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
@@ -46,7 +47,10 @@ class TopButton extends StatelessWidget {
           children: [
             AccountButton(
               text: 'Log Out',
-              onTap: () => AccountServices().logOut(context),
+              onTap: () => AccountServices().logOut(
+                context,
+                logoutRedirectRouteName: LoginSelectionScreen.routeName,
+              ),
             ),
             AccountButton(
               text: 'Set home address',

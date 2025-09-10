@@ -44,7 +44,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'E-commerce App Demo',
+      title: 'Revos Gas Platform',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: GlobalVariables.primaryColor,

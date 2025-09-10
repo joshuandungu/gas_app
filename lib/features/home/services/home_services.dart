@@ -29,16 +29,16 @@ class HomeServices {
         context: context,
         onSuccess: () {
           var jsonData = jsonDecode(res.body) as List;
-          productList = jsonData.map((item) {
+          for (var item in jsonData) {
             // Flatten the nested sellerId object for easier use in the Product model
             if (item['sellerId'] != null && item['sellerId'] is Map) {
-              item['shopName'] = item['sellerId']['shopName']?.toString() ?? '';
-              item['shopAvatar'] =
-                  item['sellerId']['shopAvatar']?.toString() ?? '';
-              item['sellerId'] = item['sellerId']['_id']?.toString() ?? '';
+              final sellerData = item['sellerId'];
+              item['shopName'] = sellerData['shopName']?.toString() ?? '';
+              item['shopAvatar'] = sellerData['shopAvatar']?.toString() ?? '';
+              item['sellerId'] = sellerData['_id']?.toString() ?? '';
             }
-            return Product.fromMap(item);
-          }).toList();
+            productList.add(Product.fromMap(item));
+          }
         },
       );
     } catch (e) {

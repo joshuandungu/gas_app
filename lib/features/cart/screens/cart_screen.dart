@@ -161,10 +161,11 @@ class _CartScreenState extends State<CartScreen> {
                     child: CustomButton(
                       text: "Start Shopping",
                       textColor: Colors.black,
-                      function: () {
-                        Navigator.pushReplacementNamed(
-                            context, BottomBar.routeName);
-                      },
+                      function: () => Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        BottomBar.routeName,
+                        (route) => false,
+                      ),
                       color: Colors.yellow[600],
                     ),
                   ),

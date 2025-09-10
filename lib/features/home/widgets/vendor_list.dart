@@ -1,7 +1,10 @@
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/shop_profile_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/services/seller_services.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_detail_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 
 class VendorList extends StatefulWidget {
   const VendorList({super.key});
@@ -35,6 +38,23 @@ class _VendorListState extends State<VendorList> {
     );
   }
 
+  void _navigateToChatDetail(String receiverId, String receiverName) {
+    final currentUser = Provider.of<UserProvider>(context, listen: false).user;
+    // Generate a chat room ID based on the user and receiver IDs
+    List<String> ids = [
+      currentUser.id,
+      receiverId,
+    ];
+    ids.sort(); // Ensure consistent ordering
+    String chatRoomId = ids.join(
+        "_"); // e.g., userId1_userId2, which will be the same for both users
+
+    Navigator.pushNamed(context, ChatDetailScreen.routeName, arguments: {
+      'chatRoomId': chatRoomId,
+      'receiverName': receiverName,
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return vendors == null
@@ -48,7 +68,8 @@ class _VendorListState extends State<VendorList> {
               itemBuilder: (context, index) {
                 final vendor = vendors![index];
                 return GestureDetector(
-                  onTap: () => navigateToShopProfile(vendor.id),
+                  onTap: () =>
+                      _navigateToChatDetail(vendor.id, vendor.shopName),
                   child: Column(
                     children: [
                       Container(

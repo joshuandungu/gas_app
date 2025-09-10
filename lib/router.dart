@@ -1,14 +1,17 @@
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/bottom_bar.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/seller_registration_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/address_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/set_address.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_register_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/add_product_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_detail_screen.dart'; // This path is correct
+import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_chat_list_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_list_screen.dart'; // This path is correct
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/set_discount_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/shop_profile_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/shop_profile_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_register_screen.dart';
@@ -21,6 +24,7 @@ import 'package:ecommerce_app_fluterr_nodejs/features/order_details/screens/orde
 import 'package:ecommerce_app_fluterr_nodejs/features/product_details/screens/product_details_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/search/screens/search_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/product.dart';
 import 'package:flutter/material.dart';
@@ -36,6 +40,11 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => const UserRegisterScreen(),
+      );
+    case LoginSelectionScreen.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const LoginSelectionScreen(),
       );
     case HomeScreen.routeName:
       return MaterialPageRoute(
@@ -81,6 +90,11 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => const SellerScreen(),
+      );
+    case SellerChatListScreen.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const SellerChatListScreen(),
       );
     case ShopProfileScreen.routeName:
       var sellerId = routeSettings.arguments as String;
@@ -171,6 +185,7 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         builder: (_) => ChatDetailScreen(
           chatRoomId: args['chatRoomId'] as String,
           receiverName: args['receiverName'] as String,
+          receiver: args['receiver'] as User,
         ),
       );
     default:

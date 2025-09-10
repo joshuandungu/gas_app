@@ -5,6 +5,8 @@ import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_button.dart';
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_textfield.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/services/seller_services.dart';
+import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:dotted_border/dotted_border.dart';
 // BorderType is provided by dotted_border package
 // BorderType is provided by dotted_border package
@@ -66,12 +68,14 @@ class _SellerRegistrationScreenState extends State<SellerRegistrationScreen> {
       showSnackBar(context, "Please pick image!");
     }
     if (_registrationFormKey.currentState!.validate() && avatarImage != null) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
       String status = await sellerServices.registerSeller(
         context: context,
         shopName: _shopNameController.text,
         shopDescription: _shopDescriptionController.text,
         address: _addressController.text,
         avatar: avatarImage!,
+        userId: userProvider.user.id,
       );
       setState(() {
         requestStatus = status;
@@ -199,8 +203,10 @@ class _SellerRegistrationScreenState extends State<SellerRegistrationScreen> {
                       const SizedBox(height: 20),
                       CustomButton(
                         text: 'Send Request',
-                        function:
-                            requestStatus != 'pending' ? registerSeller : null,
+                        function: (requestStatus != 'pending' &&
+                                requestStatus != 'approved')
+                            ? registerSeller
+                            : null,
                       ),
                     ],
                   ),

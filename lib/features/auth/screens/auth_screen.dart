@@ -1,3 +1,4 @@
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/user_register_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/widgets/login_form.dart';
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_button.dart';
@@ -56,6 +57,18 @@ class AuthScreen extends StatelessWidget {
                       context, UserRegisterScreen.routeName),
                   color: Colors.grey[200],
                   textColor: Colors.black,
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.center,
+                  child: TextButton(
+                    onPressed: () {
+                      // Use pushNamed to go to the selection screen since the stack was cleared on logout.
+                      Navigator.pushNamed(
+                          context, LoginSelectionScreen.routeName);
+                    },
+                    child: const Text('Go back to login selection'),
+                  ),
                 ),
                 const SizedBox(height: 40), // Pushes content up from bottom
               ],

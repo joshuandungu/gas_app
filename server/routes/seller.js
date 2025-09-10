@@ -4,6 +4,7 @@ const Order = require("../models/order");
 const sellerRouter = express.Router();
 const seller = require("../middlewares/seller");
 
+const config = require('../config/config'); // Import config
 const SellerRequest = require('../models/sellerRequest');
 
 const auth = require('../middlewares/auth');
@@ -13,16 +14,16 @@ const Notification = require('../models/notification');
 
 
 // Register as seller
-sellerRouter.post('/api/register-seller', auth, async (req, res) => {
+sellerRouter.post('/api/register-seller', async (req, res) => {
     try {
-        const { shopName, shopDescription, address, avatarUrl } = req.body;
+        const { shopName, shopDescription, address, avatarUrl, userId } = req.body;
 
-        if (!shopName || !shopDescription || !address || !avatarUrl) {
+        if (!shopName || !shopDescription || !address || !avatarUrl || !userId) {
             return res.status(400).json({ msg: "All fields are required" });
         }
 
         // Check if user is already a seller
-        const user = await User.findById(req.user);
+        const user = await User.findById(userId);
         if (user.type === 'seller') {
             return res.status(400).json({ msg: "You are already a seller" });
         }
@@ -35,7 +36,7 @@ sellerRouter.post('/api/register-seller', auth, async (req, res) => {
 
         // Check if user already has a pending request
         const existingRequest = await SellerRequest.findOne({
-            userId: req.user,
+            userId: userId,
             status: 'pending'
         });
 
@@ -45,7 +46,7 @@ sellerRouter.post('/api/register-seller', auth, async (req, res) => {
 
         // Create new seller request
         const sellerRequest = new SellerRequest({
-            userId: req.user,
+            userId: userId,
             shopName,
             shopDescription,
             address,
@@ -218,7 +219,7 @@ sellerRouter.get("/seller/analytics", seller, async (req, res) => {
             Essentials: 0,
             Appliances: 0,
             Books: 0,
-      Fashion: 0,
+            Fashion: 0,
             'Gas Products': 0
         };
 
