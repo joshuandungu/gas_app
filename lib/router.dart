@@ -5,6 +5,8 @@ import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/set_addres
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_register_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/add_product_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_detail_screen.dart'; // This path is correct
+import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_list_screen.dart'; // This path is correct
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/set_discount_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/shop_profile_screen.dart';
@@ -156,6 +158,20 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => const SetAddressScreen(),
+      );
+    case ChatListScreen.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const ChatListScreen(),
+      );
+    case ChatDetailScreen.routeName:
+      var args = routeSettings.arguments as Map<String, dynamic>;
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => ChatDetailScreen(
+          chatRoomId: args['chatRoomId'] as String,
+          receiverName: args['receiverName'] as String,
+        ),
       );
     default:
       return MaterialPageRoute(
