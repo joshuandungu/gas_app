@@ -37,6 +37,13 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
         password: _passwordController.text,
         name: _nameController.text,
         role: 'user',
+        onSuccess: (email) {
+          Navigator.pushNamed(
+            context,
+            '/user-email-verification-screen',
+            arguments: email,
+          );
+        },
       );
     }
   }
@@ -45,7 +52,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create User Account'),
+        title: const Text('Create Buyer Account'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

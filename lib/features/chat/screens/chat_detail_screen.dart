@@ -32,6 +32,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void initState() {
     super.initState();
     _fetchMessages();
+    _resetUnreadCount();
     _chatService.connect(context);
     _chatService.joinRoom(widget.chatRoomId);
 
@@ -65,6 +66,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       _messages.addAll(fetchedMessages);
       _isLoading = false;
     });
+  }
+
+  void _resetUnreadCount() async {
+    await _chatService.getOrCreateChatRoom(
+        context: context, receiverId: widget.receiver.id);
+    _chatService.emitChatListUpdate();
   }
 
   @override
@@ -106,6 +113,36 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
+  void _deleteChat() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Conversation'),
+        content: const Text('Are you sure you want to delete this conversation?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _chatService.deleteChat(
+        context: context,
+        chatRoomId: widget.chatRoomId,
+      );
+      if (mounted) {
+        Navigator.of(context).pop(); // Go back to chat list
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<UserProvider>(context).user;
@@ -113,6 +150,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.receiverName),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _deleteChat,
+          ),
+        ],
       ),
       body: Column(
         children: [

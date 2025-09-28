@@ -189,13 +189,10 @@ class SellerServices {
         response: res,
         context: context,
         onSuccess: () {
-          for (int i = 0; i < jsonDecode(res.body).length; i++) {
+          final List<dynamic> productData = jsonDecode(res.body);
+          for (final item in productData) {
             productList.add(
-              Product.fromJson(
-                jsonEncode(
-                  jsonDecode(res.body)[i],
-                ),
-              ),
+              Product.fromMap(item as Map<String, dynamic>),
             );
           }
         },
@@ -250,13 +247,10 @@ class SellerServices {
         response: res,
         context: context,
         onSuccess: () {
-          for (int i = 0; i < jsonDecode(res.body).length; i++) {
+          final List<dynamic> orderData = jsonDecode(res.body);
+          for (final item in orderData) {
             orderList.add(
-              Order.fromJson(
-                jsonEncode(
-                  jsonDecode(res.body)[i],
-                ),
-              ),
+              Order.fromMap(item as Map<String, dynamic>),
             );
           }
         },
@@ -423,8 +417,9 @@ class SellerServices {
         onSuccess: () {
           var data = jsonDecode(res.body);
           shopOwner = User.fromMap(data['shopOwner']);
-          products = (data['products'] as List)
-              .map((product) => Product.fromJson(jsonEncode(product)))
+          products = (data['products'] as List<dynamic>)
+              .map(
+                  (product) => Product.fromMap(product as Map<String, dynamic>))
               .toList();
         },
       );

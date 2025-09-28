@@ -34,6 +34,16 @@ class _MpesaPhoneDialogState extends State<MpesaPhoneDialog> {
           textController: _phoneController,
           hintText: 'e.g., 0712345678',
           keyboardType: TextInputType.phone,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Phone number is required';
+            }
+            final phoneRegExp = RegExp(r'^\d{9,12}$');
+            if (!phoneRegExp.hasMatch(value)) {
+              return 'Enter a valid phone number (9-12 digits)';
+            }
+            return null;
+          },
         ),
       ),
       actions: [

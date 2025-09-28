@@ -25,6 +25,14 @@ const userSchema = mongoose.Schema({
         type: String,
         
     },
+    isEmailVerified: {
+        type: Boolean,
+        default: false,
+    },
+    emailVerificationCode: {
+        type: String,
+        default: null,
+    },
     address: {
         type: String,
         default: "",
@@ -33,6 +41,11 @@ const userSchema = mongoose.Schema({
         type: String,
         enum: ['user', 'seller', 'admin'],
         default: "user",
+    },
+    status: {
+        type: String,
+        enum: ['active', 'suspended', 'deleted'],
+        default: "active",
     },
     shopName: {
         type: String,

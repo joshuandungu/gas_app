@@ -5,6 +5,8 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const auth = require("../middlewares/auth");
 const config = require("../config/config.js");
+const { sendEmail } = require("../utils/email");
+const crypto = require("crypto");
 
 // SIGN UP
 authRouter.post("/api/signup", async (req, res) => {
@@ -18,14 +20,26 @@ authRouter.post("/api/signup", async (req, res) => {
             return res.status(400).json({ msg: "Password must be at least 6 characters" });
         }
         const hashedPassword = await bcryptjs.hash(password, 8);
+
+        // Generate a random 6-digit verification code
+        const verificationCode = crypto.randomInt(100000, 999999).toString();
+
         let user = new User({
             email,
             password: hashedPassword,
             name,
             type: role || 'user',
+            isEmailVerified: false,
+            emailVerificationCode: verificationCode,
         });
         user = await user.save();
-        res.json(user);
+
+        // Send verification code email
+        const subject = "Your Email Verification Code";
+        const text = `Your verification code is: ${verificationCode}`;
+        await sendEmail(email, subject, text);
+
+        res.json({ msg: "User registered successfully. Verification code sent to email." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -39,6 +53,9 @@ authRouter.post("/api/signin", async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(400).json({ msg: "User with this email does not exist!" });
+        }
+        if (!user.isEmailVerified) {
+            return res.status(400).json({ msg: "Email not verified. Please verify your email before signing in." });
         }
         if (role && user.type !== role) {
             return res.status(400).json({ msg: `This account is not registered as a ${role}.` });
@@ -117,6 +134,28 @@ authRouter.post("/api/update-password", async (req, res) => {
         );
 
         res.json({ msg: "Password updated successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+authRouter.post("/api/verify-email", async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ msg: "User with this email does not exist!" });
+        }
+        if (user.isEmailVerified) {
+            return res.status(400).json({ msg: "Email is already verified." });
+        }
+        if (user.emailVerificationCode !== code) {
+            return res.status(400).json({ msg: "Invalid verification code." });
+        }
+        user.isEmailVerified = true;
+        user.emailVerificationCode = null;
+        await user.save();
+        res.json({ msg: "Email verified successfully." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

@@ -3,78 +3,81 @@ import 'package:flutter/material.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/services/admin_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 
-class SellersScreen extends StatefulWidget {
-  const SellersScreen({Key? key}) : super(key: key);
+class UsersScreen extends StatefulWidget {
+  const UsersScreen({Key? key}) : super(key: key);
 
   @override
-  State<SellersScreen> createState() => _SellersScreenState();
+  State<UsersScreen> createState() => _UsersScreenState();
 }
 
-class _SellersScreenState extends State<SellersScreen> {
-  List<User>? sellers;
+class _UsersScreenState extends State<UsersScreen> {
+  List<User>? users;
   final AdminServices adminServices = AdminServices();
 
   @override
   void initState() {
     super.initState();
-    fetchSellers();
+    fetchUsers();
   }
 
-  fetchSellers() async {
-    sellers = await adminServices.fetchSellers(context);
+  fetchUsers() async {
+    users = await adminServices.fetchUsers(context);
     setState(() {});
   }
 
-  void suspendSeller(String sellerId) {
-    adminServices.suspendSeller(
+  void suspendUser(String userId) {
+    adminServices.suspendUser(
       context: context,
-      sellerId: sellerId,
+      userId: userId,
       onSuccess: () {
-        fetchSellers();
+        fetchUsers();
       },
     );
   }
 
-  void deleteSeller(String sellerId) {
-    adminServices.deleteSeller(
+  void deleteUser(String userId) {
+    adminServices.deleteUser(
       context: context,
-      sellerId: sellerId,
+      userId: userId,
       onSuccess: () {
-        fetchSellers();
+        fetchUsers();
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return sellers == null
+    return users == null
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
+            appBar: AppBar(
+              title: const Text('Manage Users'),
+            ),
             body: ListView.builder(
-              itemCount: sellers!.length,
+              itemCount: users!.length,
               itemBuilder: (context, index) {
-                final seller = sellers![index];
+                final user = users![index];
                 return ListTile(
-                  title: Text(seller.name),
-                  subtitle: Text(seller.email),
+                  title: Text(user.name),
+                  subtitle: Text(user.email),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        onPressed: () => suspendSeller(seller.id),
+                        onPressed: () => suspendUser(user.id),
                         icon: const Icon(
                           Icons.pause,
                           color: Colors.orange,
                         ),
-                        tooltip: 'Suspend Seller',
+                        tooltip: 'Suspend User',
                       ),
                       IconButton(
-                        onPressed: () => deleteSeller(seller.id),
+                        onPressed: () => deleteUser(user.id),
                         icon: const Icon(
                           Icons.delete,
                           color: Colors.red,
                         ),
-                        tooltip: 'Delete Seller',
+                        tooltip: 'Delete User',
                       ),
                     ],
                   ),

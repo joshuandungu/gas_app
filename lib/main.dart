@@ -1,10 +1,6 @@
-import 'package:ecommerce_app_fluterr_nodejs/common/widgets/bottom_bar.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_screen.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/auth_screen.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/splash_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/services/auth_service.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/product_provider.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:ecommerce_app_fluterr_nodejs/router.dart';
@@ -52,7 +48,7 @@ class _MyAppState extends State<MyApp> {
           secondary: GlobalVariables.secondaryColor,
           background: GlobalVariables.backgroundColor,
         ),
-        // Thêm các thuộc tính theme khác
+        // AppBar theme
         appBarTheme: const AppBarTheme(
           elevation: 0,
           iconTheme: IconThemeData(
@@ -68,13 +64,7 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       onGenerateRoute: (settings) => generateRoute(settings),
-      home: (Provider.of<UserProvider>(context).user.token.isNotEmpty)
-          ? Provider.of<UserProvider>(context).user.type == 'admin'
-              ? const AdminScreen()
-              : Provider.of<UserProvider>(context).user.type == 'seller'
-                  ? const SellerScreen()
-                  : const BottomBar()
-          : const LoginSelectionScreen(),
+      home: const SplashScreen(),
     );
   }
 }

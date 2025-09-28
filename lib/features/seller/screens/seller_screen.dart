@@ -1,5 +1,6 @@
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/bottom_bar.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/edit_profile_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/analytics_screen.dart';
@@ -108,7 +109,9 @@ class _SellerScreenState extends State<SellerScreen> {
                       position: PopupMenuPosition.under,
                       offset: const Offset(0, 5),
                       onSelected: (value) {
-                        if (value == 'homepage') {
+                        if (value == 'profile') {
+                          Navigator.pushNamed(context, EditProfileScreen.routeName);
+                        } else if (value == 'homepage') {
                           Navigator.pushNamedAndRemoveUntil(
                             context,
                             BottomBar.routeName,
@@ -124,6 +127,19 @@ class _SellerScreenState extends State<SellerScreen> {
                         }
                       },
                       itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'profile',
+                          child: ListTile(
+                            title: Text(
+                              'Edit Profile',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            leading: Icon(Icons.person_outline),
+                          ),
+                        ),
                         const PopupMenuItem(
                           value: 'homepage',
                           child: ListTile(

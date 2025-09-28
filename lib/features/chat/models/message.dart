@@ -35,6 +35,7 @@ class Message {
       text: map['text'] ?? '',
       createdAt:
           DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
+      tempId: map['tempId'], // Add this line to parse tempId
     );
   }
 

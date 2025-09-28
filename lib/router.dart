@@ -1,4 +1,6 @@
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/bottom_bar.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/edit_profile_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/orders_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/seller_registration_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/address_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
@@ -18,6 +20,8 @@ import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_regi
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/update_product_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/auth_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/user_register_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/user_email_verification_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_email_verification_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/home/screens/category_deals_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/home/screens/home_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/order_details/screens/order_details_screens.dart';
@@ -41,6 +45,27 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         settings: routeSettings,
         builder: (_) => const UserRegisterScreen(),
       );
+    case UserEmailVerificationScreen.routeName:
+      var args = routeSettings.arguments;
+      if (args is Map<String, dynamic>) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => UserEmailVerificationScreen.fromArguments(args),
+        );
+      } else {
+        // Fallback for string arguments (backward compatibility)
+        var email = args as String;
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => UserEmailVerificationScreen(email: email),
+        );
+      }
+    case AdminEmailVerificationScreen.routeName:
+      var email = routeSettings.arguments as String;
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => AdminEmailVerificationScreen(email: email),
+      );
     case LoginSelectionScreen.routeName:
       return MaterialPageRoute(
         settings: routeSettings,
@@ -55,6 +80,16 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => const BottomBar(),
+      );
+    case EditProfileScreen.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const EditProfileScreen(),
+      );
+    case '/orders':
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const OrdersScreen(),
       );
     case AddProductScreen.routeName:
       return MaterialPageRoute(

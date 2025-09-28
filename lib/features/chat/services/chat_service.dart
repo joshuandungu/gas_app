@@ -63,6 +63,10 @@ class ChatService {
     });
   }
 
+  void emitChatListUpdate() {
+    _socket?.emit('newChatUpdate');
+  }
+
   Future<ChatRoom?> getOrCreateChatRoom({
     required BuildContext context,
     required String receiverId,

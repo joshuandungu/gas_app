@@ -151,8 +151,18 @@ adminRouter.get("/admin/sellers", admin, async (req, res) => {
     }
 });
 
-// Disable seller account
-adminRouter.post("/admin/disable-seller", admin, async (req, res) => {
+// Get all users (buyers)
+adminRouter.get("/admin/users", admin, async (req, res) => {
+    try {
+        const users = await User.find({ type: "user" });
+        res.json(users);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Suspend seller account
+adminRouter.post("/admin/suspend-seller", admin, async (req, res) => {
     try {
         const { sellerId } = req.body;
         const seller = await User.findById(sellerId);
@@ -161,9 +171,63 @@ adminRouter.post("/admin/disable-seller", admin, async (req, res) => {
             return res.status(404).json({ msg: "Seller not found" });
         }
 
-        seller.type = "user";
+        seller.status = "suspended";
         await seller.save();
-        res.json({ msg: "Seller account disabled successfully" });
+        res.json({ msg: "Seller account suspended successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Delete seller account
+adminRouter.delete("/admin/seller/:id", admin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const seller = await User.findById(id);
+
+        if (!seller || seller.type !== "seller") {
+            return res.status(404).json({ msg: "Seller not found" });
+        }
+
+        seller.status = "deleted";
+        await seller.save();
+        res.json({ msg: "Seller account deleted successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Suspend user account
+adminRouter.post("/admin/suspend-user", admin, async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const user = await User.findById(userId);
+
+        if (!user || user.type !== "user") {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        user.status = "suspended";
+        await user.save();
+        res.json({ msg: "User account suspended successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Delete user account
+adminRouter.delete("/admin/user/:id", admin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+
+        if (!user || user.type !== "user") {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        user.status = "deleted";
+        await user.save();
+        res.json({ msg: "User account deleted successfully" });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

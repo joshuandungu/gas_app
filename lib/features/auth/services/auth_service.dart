@@ -20,7 +20,7 @@ class AuthService {
     required String password,
     required String name,
     required String role,
-    Function(User)? onSuccess,
+    Function(String)? onSuccess,
   }) async {
     try {
       http.Response res = await http.post(
@@ -41,7 +41,7 @@ class AuthService {
         context: context,
         onSuccess: () {
           if (onSuccess != null) {
-            onSuccess(User.fromJson(res.body));
+            onSuccess(email);
           } else {
             showSnackBar(context, 'Account has been successfully created!');
           }
@@ -71,7 +71,7 @@ class AuthService {
           'Content-Type': 'application/json; charset=UTF-8',
         },
       );
-      //if (!context.mounted) return;
+      if (!context.mounted) return;
       httpErrorHandle(
         response: res,
         context: context,
@@ -125,7 +125,7 @@ class AuthService {
             'x-auth-token': token,
           },
         );
-        if (!context.mounted) return;
+        if (!context.mounted) return; // Add this check
         var userProvider = Provider.of<UserProvider>(context, listen: false);
         userProvider.setUser(userRes.body);
       }
@@ -208,5 +208,40 @@ class AuthService {
       }
     }
     return success;
+  }
+
+  // verify email
+  void verifyEmail({
+    required BuildContext context,
+    required String email,
+    required String code,
+    Function()? onSuccess,
+  }) async {
+    try {
+      http.Response res = await http.post(
+        Uri.parse('$uri/api/verify-email'),
+        body: jsonEncode({
+          'email': email,
+          'code': code,
+        }),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+      if (!context.mounted) return;
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          if (onSuccess != null) {
+            onSuccess();
+          } else {
+            showSnackBar(context, 'Email verified successfully!');
+          }
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
   }
 }

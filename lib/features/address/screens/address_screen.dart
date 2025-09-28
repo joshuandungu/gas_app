@@ -160,6 +160,9 @@ class _AddressScreenState extends State<AddressScreen> {
   }
 
   void handleMpesaPayment(String address, double shippingFee) {
+    setState(() {
+      isLoading = true;
+    });
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -184,6 +187,11 @@ class _AddressScreenState extends State<AddressScreen> {
                     orderId: order.id,
                     phoneNumber: phoneNumber,
                     amount: order.totalPrice);
+                if (mounted) {
+                  setState(() {
+                    isLoading = false;
+                  });
+                }
               },
             );
           } else {
@@ -201,6 +209,11 @@ class _AddressScreenState extends State<AddressScreen> {
                     orderId: order.id,
                     phoneNumber: phoneNumber,
                     amount: order.totalPrice);
+                if (mounted) {
+                  setState(() {
+                    isLoading = false;
+                  });
+                }
               },
             );
           }
@@ -395,15 +408,24 @@ class _AddressScreenState extends State<AddressScreen> {
                 height: 48,
                 margin: const EdgeInsets.only(top: 15.0),
                 child: ElevatedButton(
-                  onPressed: () => payPressed(address, 'M-Pesa'),
+                  onPressed: isLoading ? null : () => payPressed(address, 'M-Pesa'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green, // M-Pesa color
                     shape: const StadiumBorder(),
                   ),
-                  child: const Text(
-                    'Pay with M-Pesa',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Pay with M-Pesa',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
                 ),
               ),
               const Padding(

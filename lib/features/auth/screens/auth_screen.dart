@@ -12,7 +12,11 @@ class AuthScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.lightBlue,
+        leading: BackButton(color: Colors.black),
+        title: const Text('Welcome to Gas App',
+            style: TextStyle(color: Colors.black)),
+        centerTitle: true,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
@@ -36,7 +40,7 @@ class AuthScreen extends StatelessWidget {
 
                 const LoginForm(
                   role: 'user',
-                  title: 'User Login',
+                  title: 'Buyer Login ',
                   registerRouteName: UserRegisterScreen.routeName,
                 ),
                 const SizedBox(height: 20),

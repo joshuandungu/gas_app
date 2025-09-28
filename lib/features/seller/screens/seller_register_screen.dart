@@ -67,22 +67,21 @@ class _SellerRegisterScreenState extends State<SellerRegisterScreen> {
           email: _emailController.text,
           password: _passwordController.text,
           name: _nameController.text,
-          role: 'user',
-          onSuccess: (user) {
-            // If user creation is successful, register them as a seller
-            sellerServices
-                .registerSeller(
-              context: context,
-              shopName: _shopNameController.text,
-              shopDescription: _shopDescriptionController.text,
-              address: _addressController.text,
-              avatar: avatarImage!,
-              userId: user.id, // Pass the new user's ID
-            )
-                .then((_) {
-              setState(() {
-                _isLoading = false;
-              });
+          role: 'seller',
+          onSuccess: (email) {
+            // Navigate to email verification screen with seller login redirect
+            Navigator.pushNamed(
+              context,
+              '/user-email-verification-screen',
+              arguments: {
+                'email': email,
+                'redirectRoute': '/seller-login-screen', // Redirect to seller login after verification
+              },
+            );
+            // Note: After email verification, user will need to sign in manually
+            // and then complete seller registration
+            setState(() {
+              _isLoading = false;
             });
           });
     } else if (avatarImage == null) {

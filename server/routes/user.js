@@ -6,6 +6,7 @@ const User = require('../models/user');
 const Order = require("../models/order");
 const Notification = require('../models/notification');
 
+
 // Add product to cart
 userRouter.post("/api/add-to-cart", auth, async (req, res) => {
     try {
@@ -33,21 +34,21 @@ userRouter.delete("/api/remove-from-cart/:id", auth, async (req, res) => {
         const { id } = req.params;
         const product = await Product.findById(id);
         let user = await User.findById(req.user);
-        
+
         // Find and update the product in cart
         const cartItemIndex = user.cart.findIndex(
             (item) => item.product._id.equals(product._id)
         );
-        
+
         if (cartItemIndex !== -1) {
             user.cart[cartItemIndex].quantity--;
-            
+
             // Remove item if quantity reaches 0
             if (user.cart[cartItemIndex].quantity <= 0) {
                 user.cart.splice(cartItemIndex, 1);
             }
         }
-        
+
         user = await user.save();
         res.json(user);
     } catch (e) {
@@ -68,182 +69,74 @@ userRouter.post("/api/save-user-address", auth, async (req, res) => {
     }
 });
 
-// order product
-userRouter.post("/api/order", auth, async (req, res) => {
-    try {
-        const { cart, totalPrice, address, paymentMethod, phoneNumber } = req.body;
-        let products = [];
-        let user = await User.findById(req.user);
-        // Tạo Set chứa ID của các sản phẩm được đặt hàng để dễ so sánh
-        const orderedProductIds = new Set(cart.map(item => item.product._id));
-        // Xử lý đặt hàng
-        for (let i = 0; i < cart.length; i++) {
-            let product = await Product.findById(cart[i].product._id);
-            if (product.quantity >= cart[i].quantity) {
-                product.quantity -= cart[i].quantity;
-                products.push({ product, quantity: cart[i].quantity });
-                await product.save();
-            } else {
-                return res.status(400).json({ msg: `${product.name} is out of stock!` });
-            }
-        }
-
-        // Lọc giỏ hàng để giữ lại những sản phẩm không được đặt
-        user.cart = user.cart.filter(item => !orderedProductIds.has(item.product._id.toString()));
-        user = await user.save();
-
-        // Tạo đơn hàng mới
-        let order = new Order({
-            products,
-            totalPrice,
-            address,
-            userId: req.user,
-            orderedAt: new Date().getTime(),
-            paymentMethod: paymentMethod,
-            paymentStatus: paymentMethod === 'COD' ? 'pending' : 'initiated',
-            phoneNumber,
-        });
-        order = await order.save();
-        res.json(order);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
-
-// Add new route for direct order
-userRouter.post("/api/order-direct", auth, async (req, res) => {
-    try {
-        const { products, quantities, totalPrice, address, paymentMethod, phoneNumber } = req.body;
-        let orderProducts = [];
-
-        for (let i = 0; i < products.length; i++) {
-            let product = await Product.findById(products[i]._id);
-            if (product.quantity >= quantities[i]) {
-                product.quantity -= quantities[i];
-                orderProducts.push({ product, quantity: quantities[i] });
-                await product.save();
-            } else {
-                return res.status(400).json({ msg: `${product.name} is out of stock!` });
-            }
-        }
-
-        let order = new Order({
-            products: orderProducts,
-            totalPrice,
-            address,
-            userId: req.user,
-            orderedAt: new Date().getTime(),
-            paymentMethod: paymentMethod,
-            paymentStatus: paymentMethod === 'COD' ? 'pending' : 'initiated',
-            phoneNumber,
-        });
-
-        order = await order.save();
-        res.json(order);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
-
-// get my order
+// get all your orders
 userRouter.get("/api/orders/me", auth, async (req, res) => {
     try {
-        const orders = await Order.find({ userId: req.user });
+        const orders = await Order.find({ userId: req.user }).populate('products.product');
         res.json(orders);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-
-
-// Get notifications for user
+// get all your notifications
 userRouter.get("/api/notifications", auth, async (req, res) => {
     try {
-        const notifications = await Notification.find({ 
-            userId: req.user 
-        })
-        .sort({ createdAt: -1 }) // Sort by newest first
-        .limit(50); // Limit to last 50 notifications
-        
+        const notifications = await Notification.find({ userId: req.user }).sort({ createdAt: -1 });
         res.json(notifications);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-// Mark notification as read
-userRouter.post("/api/notifications/mark-read/:id", auth, async (req, res) => {
-    try {
-        const notification = await Notification.findOneAndUpdate(
-            {
-                _id: req.params.id,
-                userId: req.user
-            },
-            { isRead: true },
-            { new: true }
-        );
-
-        if (!notification) {
-            return res.status(404).json({ msg: "Notification not found" });
-        }
-
-        res.json(notification);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
-
-// Mark all notifications as read
-userRouter.post("/api/notifications/mark-all-read", auth, async (req, res) => {
+// mark all notifications as read
+userRouter.post("/api/notifications/mark-read", auth, async (req, res) => {
     try {
         await Notification.updateMany(
-            { userId: req.user, isRead: false },
-            { isRead: true }
+            { userId: req.user, read: false },
+            { $set: { read: true } }
         );
-        
-        res.json({ msg: "All notifications marked as read" });
+        res.json({ msg: 'All notifications marked as read' });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-// Delete notification
+// delete a notification
 userRouter.delete("/api/notifications/:id", auth, async (req, res) => {
     try {
         const notification = await Notification.findOneAndDelete({
             _id: req.params.id,
             userId: req.user
         });
-
         if (!notification) {
-            return res.status(404).json({ msg: "Notification not found" });
+            return res.status(404).json({ msg: 'Notification not found' });
         }
-
-        res.json({ msg: "Notification deleted successfully" });
+        res.json({ msg: 'Notification deleted' });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-// Delete all notifications for user
+// delete all notifications
 userRouter.delete("/api/notifications-all", auth, async (req, res) => {
     try {
         await Notification.deleteMany({ userId: req.user });
-        res.json({ msg: "All notifications deleted successfully" });
+        res.json({ msg: 'All notifications deleted' });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-// Add option to clear notifications older than X days
+// clear old notifications
 userRouter.delete("/api/notifications-old", auth, async (req, res) => {
     try {
-        const daysOld = req.query.days || 30; // Default to 30 days
+        const { days } = req.query;
+        const daysOld = parseInt(days) || 30;
         const dateThreshold = new Date();
         dateThreshold.setDate(dateThreshold.getDate() - daysOld);
 
-        await Notification.deleteMany({
+        const result = await Notification.deleteMany({
             userId: req.user,
             createdAt: { $lt: dateThreshold }
         });
@@ -258,17 +151,103 @@ userRouter.delete("/api/notifications-old", auth, async (req, res) => {
 userRouter.get("/api/product/:id", auth, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
-        
+
         if (!product) {
             return res.status(404).json({ msg: "Product not found" });
         }
-        
+
         res.json(product);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
+// Cancel order (for buyers)
+userRouter.post("/api/orders/cancel/:id", auth, async (req, res) => {
+    try {
+        const order = await Order.findOne({
+            _id: req.params.id,
+            userId: req.user
+        });
 
+        if (!order) {
+            return res.status(404).json({ msg: "Order not found" });
+        }
+
+        if (order.status >= 1) {
+            return res.status(400).json({ msg: "Cannot cancel order that has been shipped" });
+        }
+
+        if (order.cancelled) {
+            return res.status(400).json({ msg: "Order is already cancelled" });
+        }
+
+        // Restore product quantities
+        for (let i = 0; i < order.products.length; i++) {
+            if (order.products[i].product) {
+                const product = await Product.findById(order.products[i].product._id);
+                if (product) {
+                    product.quantity += order.products[i].quantity;
+                    await product.save();
+                }
+            }
+        }
+
+        order.cancelled = true;
+        await order.save();
+
+        res.json({ msg: "Order cancelled successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Delete order (for buyers)
+userRouter.delete("/api/orders/:id", auth, async (req, res) => {
+    try {
+        const order = await Order.findOne({
+            _id: req.params.id,
+            userId: req.user
+        });
+
+        if (!order) {
+            return res.status(404).json({ msg: "Order not found" });
+        }
+
+        if (!order.cancelled) {
+            return res.status(400).json({ msg: "Can only delete cancelled orders" });
+        }
+
+        await Order.findByIdAndDelete(req.params.id);
+        res.json({ msg: "Order deleted successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Update user profile route
+userRouter.post("/api/update-profile", auth, async (req, res) => {
+    try {
+        const { name, email, address, shopName, shopDescription, shopAvatar } = req.body;
+        let user = await User.findById(req.user);
+
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (address !== undefined) user.address = address;
+        if (shopName !== undefined) user.shopName = shopName;
+        if (shopDescription !== undefined) user.shopDescription = shopDescription;
+        if (shopAvatar !== undefined) user.shopAvatar = shopAvatar;
+
+        await user.save();
+
+        res.json({ msg: "Profile updated successfully", user });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
 module.exports = userRouter;

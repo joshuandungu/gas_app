@@ -18,6 +18,7 @@ const userRouter = require("./routes/user");
 const sellerRouter = require("./routes/seller");
 const chatRouter = require("./routes/chat.js");
 const mpesaRouter = require("./routes/mpesa.js");
+const orderRouter = require("./routes/order");
 
 // INIT
 const PORT = process.env.PORT || 3000;
@@ -40,6 +41,7 @@ app.use(sellerRouter);
 app.use(adminRouter);
 app.use(productRouter);
 app.use(userRouter);
+app.use(orderRouter);
 app.use(chatRouter);
 app.use(mpesaRouter);
 
@@ -70,18 +72,19 @@ io.on('connection', (socket) => {
 
     socket.on('sendMessage', async (data) => {
         try {
+            const { chatRoomId, senderId, receiverId, text, tempId } = data;
+
             // 1. Create and save the message
             const newMessage = new Message({
-                chatRoomId: data.chatRoomId,
-                senderId: data.senderId,
-                text: data.text,
+                chatRoomId,
+                senderId,
+                text,
             });
             const savedMessage = await newMessage.save();
 
             // 2. Update the chat room with the last message
-            const receiverId = data.receiverId; // We need to know who the receiver is
             await ChatRoom.updateOne(
-                { _id: data.chatRoomId },
+                { _id: chatRoomId },
                 {
                     $set: {
                         lastMessage: savedMessage.text,
@@ -97,14 +100,17 @@ io.on('connection', (socket) => {
 
             // 3. Emit the message to the room so both users receive it
             const messageObject = savedMessage.toObject();
-            messageObject.tempId = data.tempId; // Echo back the tempId
+            messageObject.tempId = tempId; // Echo back the tempId
 
-            io.to(data.chatRoomId).emit('receiveMessage', messageObject);
+            io.to(chatRoomId).emit('receiveMessage', messageObject);
 
-            // 4. Emit an event to both participants to update their chat lists
-            io.to(data.senderId).to(data.receiverId).emit('newChatUpdate');
+            // 4. Emit an event to the room to notify clients to update their chat lists
+            io.to(chatRoomId).emit('newChatUpdate');
+
         } catch (e) {
             console.error('Error handling message:', e);
+            // Notify the sender of the failure
+            socket.emit('sendMessageError', { tempId: data.tempId, error: 'Failed to send message.' });
         }
     });
 });

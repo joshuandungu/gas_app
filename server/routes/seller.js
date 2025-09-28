@@ -176,9 +176,15 @@ sellerRouter.post("/seller/delete-product", seller, async (req, res) => {
 sellerRouter.get("/seller/get-orders", seller, async (req, res) => {
     try {
         const orders = await Order.find({
-            'products.product.sellerId': req.user
-        });
-        res.json(orders);
+            'products.product': { $exists: true }
+        }).populate('products.product');
+
+        // Filter orders to include only those with products from this seller
+        const sellerOrders = orders.filter(order =>
+            order.products.some(item => item.product && item.product.sellerId.toString() === req.user)
+        );
+
+        res.json(sellerOrders);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -460,6 +466,69 @@ sellerRouter.get("/api/sellers", auth, async (req, res) => {
         // Find all users with type 'seller' and select only needed fields
         const sellers = await User.find({ type: 'seller' }).select('shopName shopAvatar');
         res.json(sellers);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Cancel order (for sellers)
+sellerRouter.post("/seller/orders/cancel/:id", seller, async (req, res) => {
+    try {
+        const order = await Order.findOne({
+            _id: req.params.id,
+            'products.product.sellerId': req.user
+        });
+
+        if (!order) {
+            return res.status(404).json({ msg: "Order not found or you're not authorized" });
+        }
+
+        if (order.status >= 1) {
+            return res.status(400).json({ msg: "Cannot cancel order that has been shipped" });
+        }
+
+        if (order.cancelled) {
+            return res.status(400).json({ msg: "Order is already cancelled" });
+        }
+
+        // Restore product quantities for this seller's products
+        for (let i = 0; i < order.products.length; i++) {
+            if (order.products[i].product && order.products[i].product.sellerId.toString() === req.user) {
+                const product = await Product.findById(order.products[i].product._id);
+                if (product) {
+                    product.quantity += order.products[i].quantity;
+                    await product.save();
+                }
+            }
+        }
+
+        order.cancelled = true;
+        await order.save();
+
+        res.json({ msg: "Order cancelled successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Delete order (for sellers)
+sellerRouter.delete("/seller/orders/:id", seller, async (req, res) => {
+    try {
+        const order = await Order.findOne({
+            _id: req.params.id,
+            'products.product.sellerId': req.user
+        });
+
+        if (!order) {
+            return res.status(404).json({ msg: "Order not found or you're not authorized" });
+        }
+
+        if (!order.cancelled) {
+            return res.status(400).json({ msg: "Can only delete cancelled orders" });
+        }
+
+        await Order.findByIdAndDelete(req.params.id);
+        res.json({ msg: "Order deleted successfully" });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
