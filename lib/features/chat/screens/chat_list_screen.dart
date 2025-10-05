@@ -24,7 +24,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   final HomeServices _homeServices = HomeServices();
   List<ChatRoom>? _chatRooms;
   List<User>? _allSellers;
-  ChatListView _currentView = ChatListView.allSellers;
+  ChatListView _currentView = ChatListView.conversations;
 
   @override
   void initState() {

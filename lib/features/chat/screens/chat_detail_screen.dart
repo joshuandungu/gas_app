@@ -143,6 +143,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
+  void _deleteMessage(String messageId) async {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    try {
+      await _chatService.deleteMessage(
+        context: context,
+        messageId: messageId,
+      );
+      setState(() {
+        _messages.removeWhere((msg) => msg.id == messageId);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Message deleted')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete message: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<UserProvider>(context).user;
@@ -167,18 +187,51 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     itemBuilder: (context, index) {
                       final message = _messages[index];
                       final isMe = message.senderId == user.id;
-                      return Align(
-                        alignment:
-                            isMe ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 4, horizontal: 8),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isMe ? Colors.blue[200] : Colors.grey[300],
-                            borderRadius: BorderRadius.circular(16),
+                      return Dismissible(
+                        key: Key(message.id),
+                        direction: isMe ? DismissDirection.endToStart : DismissDirection.none,
+                        confirmDismiss: (direction) async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Message'),
+                              content: const Text('Are you sure you want to delete this message?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(true),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                          return confirm == true;
+                        },
+                        onDismissed: (direction) {
+                          _deleteMessage(message.id);
+                        },
+                        background: Container(
+                          color: Colors.red,
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        child: Align(
+                          alignment:
+                              isMe ? Alignment.centerRight : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isMe ? Colors.blue[200] : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(message.text),
                           ),
-                          child: Text(message.text),
                         ),
                       );
                     },

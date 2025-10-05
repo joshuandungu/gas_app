@@ -194,12 +194,13 @@ sellerRouter.get("/seller/get-orders", seller, async (req, res) => {
 sellerRouter.post("/seller/change-order-status", seller, async (req, res) => {
     try {
         const { id, status } = req.body;
-        let order = await Order.findOne({
-            _id: id,
-            'products.product.sellerId': req.user
-        });
+        let order = await Order.findById(id).populate('products.product');
         if (!order) {
-            return res.status(404).json({ msg: "Order not found or you're not authorized" });
+            return res.status(404).json({ msg: 'Order not found' });
+        }
+        const hasSellerProduct = order.products.some(item => item.product && item.product.sellerId.toString() === req.user);
+        if (!hasSellerProduct) {
+            return res.status(401).json({ msg: "You're not authorized to change this order" });
         }
         order.status = status;
         order = await order.save();

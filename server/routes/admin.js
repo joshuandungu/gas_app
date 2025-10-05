@@ -255,18 +255,20 @@ adminRouter.get("/admin/best-sellers", admin, async (req, res) => {
     try {
         const { month, year, category } = req.query;
 
-        // Tạo điều kiện filter theo tháng và năm
-        const startDate = new Date(year, month - 1, 1);
-        const endDate = new Date(year, month, 0);
-
         // Base query để lấy các đơn hàng đã delivered
         let matchQuery = {
             status: 3,
-            orderedAt: {
+        };
+
+        // Nếu có tháng và năm, thêm filter theo thời gian
+        if (month && year) {
+            const startDate = new Date(year, month - 1, 1);
+            const endDate = new Date(year, month, 0);
+            matchQuery.orderedAt = {
                 $gte: startDate.getTime(),
                 $lte: endDate.getTime(),
-            },
-        };
+            };
+        }
 
         // Thêm điều kiện category nếu có
         const categoryMatch = category
@@ -306,6 +308,32 @@ adminRouter.get("/admin/best-sellers", admin, async (req, res) => {
         ]);
 
         res.json(sellers);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Get all orders for admin
+adminRouter.get("/admin/orders", admin, async (req, res) => {
+    try {
+        const orders = await Order.find({}).populate('products.product').sort({ orderedAt: -1 });
+        res.json(orders);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Change order status by admin
+adminRouter.post("/admin/change-order-status", admin, async (req, res) => {
+    try {
+        const { id, status } = req.body;
+        let order = await Order.findById(id);
+        if (!order) {
+            return res.status(404).json({ msg: 'Order not found' });
+        }
+        order.status = status;
+        order = await order.save();
+        res.json(order);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

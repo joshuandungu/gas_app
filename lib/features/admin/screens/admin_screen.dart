@@ -1,5 +1,6 @@
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_login_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_orders_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/best_sellers_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
@@ -25,6 +26,7 @@ class _AdminScreenState extends State<AdminScreen> {
     const SellersScreen(),
     const UsersScreen(),
     const BestSellersScreen(),
+    const AdminOrdersScreen(),
   ];
 
   void updatePage(int page) {

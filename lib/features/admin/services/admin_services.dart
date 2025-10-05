@@ -6,6 +6,7 @@ import 'package:ecommerce_app_fluterr_nodejs/constants/error_handling.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/models/seller_request.dart';
+import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/seller_stats.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
@@ -237,15 +238,23 @@ class AdminServices {
 
   Future<List<SellerStats>> getBestSellers({
     required BuildContext context,
-    required int month,
-    required int year,
+    int? month,
+    int? year,
     String? category,
   }) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
-      String url = '$uri/admin/best-sellers?month=$month&year=$year';
+      String url = '$uri/admin/best-sellers';
+      List<String> params = [];
+      if (month != null && year != null) {
+        params.add('month=$month');
+        params.add('year=$year');
+      }
       if (category != null) {
-        url += '&category=$category';
+        params.add('category=$category');
+      }
+      if (params.isNotEmpty) {
+        url += '?' + params.join('&');
       }
 
       http.Response res = await http.get(
@@ -271,5 +280,61 @@ class AdminServices {
       showSnackBar(context, e.toString());
       return [];
     }
+  }
+
+  void changeOrderStatus({
+    required BuildContext context,
+    required String id,
+    required int status,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    try {
+      http.Response res = await http.post(
+        Uri.parse('$uri/admin/change-order-status'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+        body: jsonEncode({
+          'id': id,
+          'status': status,
+        }),
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {},
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+  }
+
+  Future<List<Order>> fetchAllOrders(BuildContext context) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<Order> orders = [];
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/admin/orders'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          for (var order in jsonDecode(res.body)) {
+            orders.add(Order.fromMap(order));
+          }
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return orders;
   }
 }

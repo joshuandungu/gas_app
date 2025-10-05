@@ -24,6 +24,13 @@ class _BestSellersScreenState extends State<BestSellersScreen> {
   List<SellerStats> sellers = [];
   bool isLoading = false;
   final AdminServices adminServices = AdminServices();
+  bool isAllTime = false; // Toggle for all time vs specific month
+
+  // Summary data
+  double totalRevenue = 0.0;
+  int totalOrders = 0;
+  int totalProducts = 0;
+  int totalSellers = 0;
 
   @override
   void initState() {
@@ -36,11 +43,17 @@ class _BestSellersScreenState extends State<BestSellersScreen> {
     try {
       sellers = await adminServices.getBestSellers(
         context: context,
-        month: selectedDate.month,
-        year: selectedDate.year,
+        month: isAllTime ? null : selectedDate.month,
+        year: isAllTime ? null : selectedDate.year,
         category:
             selectedCategory == 'All Categories' ? null : selectedCategory,
       );
+
+      // Calculate summary
+      totalRevenue = sellers.fold(0.0, (sum, seller) => sum + seller.totalRevenue);
+      totalOrders = sellers.fold(0, (sum, seller) => sum + seller.totalOrders);
+      totalProducts = sellers.fold(0, (sum, seller) => sum + seller.totalProducts);
+      totalSellers = sellers.length;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
@@ -165,6 +178,42 @@ class _BestSellersScreenState extends State<BestSellersScreen> {
               ],
             ),
           ),
+          // Summary Section
+          if (!isLoading && sellers.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  _buildSummaryCard(
+                    'Total Sellers',
+                    totalSellers.toString(),
+                    Icons.people,
+                    Colors.blue,
+                  ),
+                  const SizedBox(width: 16),
+                  _buildSummaryCard(
+                    'Total Revenue',
+                    '\$${totalRevenue.toStringAsFixed(2)}',
+                    Icons.attach_money,
+                    Colors.green,
+                  ),
+                  const SizedBox(width: 16),
+                  _buildSummaryCard(
+                    'Total Orders',
+                    totalOrders.toString(),
+                    Icons.shopping_cart,
+                    Colors.orange,
+                  ),
+                  const SizedBox(width: 16),
+                  _buildSummaryCard(
+                    'Total Products',
+                    totalProducts.toString(),
+                    Icons.inventory,
+                    Colors.purple,
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -402,5 +451,47 @@ class _BestSellersScreenState extends State<BestSellersScreen> {
       default:
         return const SizedBox.shrink();
     }
+  }
+
+  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 4,
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

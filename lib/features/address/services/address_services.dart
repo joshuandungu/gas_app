@@ -146,9 +146,10 @@ class AddressServices {
       onSuccess: () {
         final order = Order.fromJson(res.body);
 
-        // The onSuccess callback handles M-Pesa initiation from the UI layer.
-        // This block now only handles non-M-Pesa (or other future) payment methods.
-        if (paymentMethod != 'M-Pesa') {
+        if (paymentMethod == 'M-Pesa') {
+          // For M-Pesa, trigger the callback to start the payment flow.
+          onSuccess?.call(order);
+        } else {
           // Handle COD and other future payment methods
           showSnackBar(context, "Your order has been placed!");
           onCodSuccess?.call();
@@ -460,31 +461,45 @@ class AddressServices {
         actions: [
           TextButton(
             onPressed: () {
-              if (context.mounted) Navigator.pop(context);
-              // Navigate to order details to check status manually
-              Navigator.pushReplacementNamed(
-                context,
-                OrderDetailsScreens.routeName,
-                arguments: Order(
-                    id: orderId,
-                    products: [],
-                    quantity: [],
-                    address: '',
-                    userId: '',
-                    orderedAt: 0,
-                    status: 0,
-                    cancelled: false,
-                    totalPrice: 0,
-                    phoneNumber: '',
-                    paymentMethod: 'M-Pesa',
-                    paymentStatus: 'pending'),
-              );
+              if (context.mounted) {
+                Navigator.pop(context); // Close the timeout dialog
+                // Fetch the full order details before navigating to avoid partial data issues.
+                _fetchOrderAndNavigate(context, orderId);
+              }
             },
             child: const Text('Check Status'),
           ),
         ],
       ),
     );
+  }
+
+  // Helper to fetch full order details and navigate.
+  Future<void> _fetchOrderAndNavigate(
+      BuildContext context, String orderId) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    try {
+      final res = await http.get(
+        Uri.parse('$uri/api/orders/$orderId'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+      if (context.mounted) {
+        httpErrorHandle(
+            response: res,
+            context: context,
+            onSuccess: () {
+              final order = Order.fromJson(res.body);
+              Navigator.pushReplacementNamed(
+                  context, OrderDetailsScreens.routeName,
+                  arguments: order);
+            });
+      }
+    } catch (e) {
+      if (context.mounted) showSnackBar(context, e.toString());
+    }
   }
 
   // helper to clear cart after order

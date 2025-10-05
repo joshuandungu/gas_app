@@ -171,6 +171,30 @@ class ChatService {
     }
   }
 
+  Future<void> deleteMessage({
+    required BuildContext context,
+    required String messageId,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    try {
+      http.Response res = await http.delete(
+        Uri.parse('$uri/api/chat/message/$messageId'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {},
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+  }
+
   Future<List<Message>> getChatMessages({
     required BuildContext context,
     required String chatRoomId,

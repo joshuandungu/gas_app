@@ -3,6 +3,7 @@ import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_textfield.dar
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/services/auth_service.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_register_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
 import 'package:flutter/material.dart';
 
 class AdminLoginScreen extends StatefulWidget {
@@ -84,9 +85,9 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   alignment: Alignment.center,
                   child: TextButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pushNamed(context, LoginSelectionScreen.routeName);
                     },
-                    child: const Text('Not an admin? Go back'),
+                    child: const Text('Back to Login Selection'),
                   ),
                 ),
                 const SizedBox(height: 10),

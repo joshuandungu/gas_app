@@ -112,6 +112,7 @@ class _BottomBarState extends State<BottomBar> {
               _totalUnreadMessages.toString(),
               style: const TextStyle(color: Colors.white),
             ),
+            badgeStyle: const badges.BadgeStyle(badgeColor: Colors.red),
             showBadge: _totalUnreadMessages > 0,
             child: const Icon(Icons.chat_outlined),
           ),
