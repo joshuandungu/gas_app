@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/bottom_bar.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/error_handling.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
+// Make sure 'uri' is exported from global_variables.dart
 import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/order_details/screens/order_details_screens.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';

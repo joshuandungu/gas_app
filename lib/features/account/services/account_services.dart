@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:ecommerce_app_fluterr_nodejs/constants/error_handling.dart';
-import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
+import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart' as GlobalVariables;
 import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/auth_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/notification.dart';
@@ -19,7 +19,7 @@ class AccountServices {
     try {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       http.Response res = await http.get(
-        Uri.parse('$uri/api/orders/me'),
+        Uri.parse('${GlobalVariables.uri}/api/orders/me'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'x-auth-token': userProvider.user.token,
@@ -73,7 +73,7 @@ class AccountServices {
     List<Notification_Model> notifications = [];
     try {
       http.Response res = await http.get(
-        Uri.parse('$uri/api/notifications'),
+        Uri.parse('${GlobalVariables.uri}/api/notifications'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'x-auth-token': userProvider.user.token,
@@ -106,7 +106,8 @@ class AccountServices {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
       http.Response res = await http.post(
-        Uri.parse('$uri/api/notifications/mark-read/$notificationId'),
+        Uri.parse(
+            '${GlobalVariables.uri}/api/notifications/mark-read/$notificationId'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'x-auth-token': userProvider.user.token,
@@ -127,7 +128,7 @@ class AccountServices {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
       http.Response res = await http.post(
-        Uri.parse('$uri/api/notifications/mark-all-read'),
+        Uri.parse('${GlobalVariables.uri}/api/notifications/mark-all-read'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'x-auth-token': userProvider.user.token,
@@ -151,7 +152,7 @@ class AccountServices {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
       http.Response res = await http.delete(
-        Uri.parse('$uri/api/notifications/$notificationId'),
+        Uri.parse('${GlobalVariables.uri}/api/notifications/$notificationId'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'x-auth-token': userProvider.user.token,
@@ -175,7 +176,7 @@ class AccountServices {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
       http.Response res = await http.delete(
-        Uri.parse('$uri/api/notifications-all'),
+        Uri.parse('${GlobalVariables.uri}/api/notifications-all'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'x-auth-token': userProvider.user.token,
@@ -198,7 +199,7 @@ class AccountServices {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
       http.Response res = await http.delete(
-        Uri.parse('$uri/api/notifications-old?days=$days'),
+        Uri.parse('${GlobalVariables.uri}/api/notifications-old?days=$days'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'x-auth-token': userProvider.user.token,
@@ -238,7 +239,7 @@ class AccountServices {
       if (shopAvatar != null) body['shopAvatar'] = shopAvatar;
 
       http.Response res = await http.post(
-        Uri.parse('$uri/api/update-profile'),
+        Uri.parse('${GlobalVariables.uri}/api/update-profile'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'x-auth-token': userProvider.user.token,

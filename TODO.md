@@ -1,6 +1,6 @@
-# TODO: Fix Android Gradle Plugin and Java Compatibility
-
-- [x] Update AGP version in android/settings.gradle from 8.2.0 to 8.2.1
-- [x] Update sourceCompatibility and targetCompatibility in android/app/build.gradle to JavaVersion.VERSION_21
-- [x] Update kotlinOptions jvmTarget in android/app/build.gradle to '21'
-- [ ] Run Gradle sync or build to verify the changes
+- [x] Update android/app/build.gradle: set compileSdk to 35 (required by plugins), targetSdkVersion to 34
+- [x] Update android/build.gradle: change AGP version from 8.1.4 to 8.2.1
+- [x] Update android/settings.gradle: change kotlin version from 1.8.22 to 1.9.10
+- [x] Set app icon to reflect that of a gas burner
+- [x] Change carousel images to online links for mobiles, appliances, essentials, books, fashion, and gas products
+- [ ] Run flutter build apk to verify the changes

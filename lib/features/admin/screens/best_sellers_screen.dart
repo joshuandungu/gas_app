@@ -50,9 +50,11 @@ class _BestSellersScreenState extends State<BestSellersScreen> {
       );
 
       // Calculate summary
-      totalRevenue = sellers.fold(0.0, (sum, seller) => sum + seller.totalRevenue);
+      totalRevenue =
+          sellers.fold(0.0, (sum, seller) => sum + seller.totalRevenue);
       totalOrders = sellers.fold(0, (sum, seller) => sum + seller.totalOrders);
-      totalProducts = sellers.fold(0, (sum, seller) => sum + seller.totalProducts);
+      totalProducts =
+          sellers.fold(0, (sum, seller) => sum + seller.totalProducts);
       totalSellers = sellers.length;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -453,7 +455,8 @@ class _BestSellersScreenState extends State<BestSellersScreen> {
     }
   }
 
-  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
+  Widget _buildSummaryCard(
+      String title, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
