@@ -232,10 +232,9 @@ userRouter.delete("/api/orders/:id", auth, async (req, res) => {
     }
 });
 
-// Update user profile route
 userRouter.post("/api/update-profile", auth, async (req, res) => {
     try {
-        const { name, email, address, shopName, shopDescription, shopAvatar } = req.body;
+        const { name, email, phoneNumber, address, shopName, shopDescription, shopAvatar } = req.body;
         let user = await User.findById(req.user);
 
         if (!user) {
@@ -244,6 +243,7 @@ userRouter.post("/api/update-profile", auth, async (req, res) => {
 
         if (name) user.name = name;
         if (email) user.email = email;
+        if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
         if (address !== undefined) user.address = address;
         if (shopName !== undefined) user.shopName = shopName;
         if (shopDescription !== undefined) user.shopDescription = shopDescription;
@@ -252,6 +252,55 @@ userRouter.post("/api/update-profile", auth, async (req, res) => {
         await user.save();
 
         res.json({ msg: "Profile updated successfully", user });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Get top sellers by revenue
+userRouter.get("/api/best-sellers", auth, async (req, res) => {
+    try {
+        const sellers = await Order.aggregate([
+            { $match: { status: 3 } },
+            { $unwind: "$products" },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "products.product.sellerId",
+                    foreignField: "_id",
+                    as: "seller",
+                },
+            },
+            { $unwind: "$seller" },
+            {
+                $group: {
+                    _id: "$seller._id",
+                    name: { $first: "$seller.name" },
+                    email: { $first: "$seller.email" },
+                    shopName: { $first: "$seller.shopName" },
+                    shopDescription: { $first: "$seller.shopDescription" },
+                    shopAvatar: { $first: "$seller.shopAvatar" },
+                    address: { $first: "$seller.address" },
+                    latitude: { $first: "$seller.latitude" },
+                    longitude: { $first: "$seller.longitude" },
+                    type: { $first: "$seller.type" },
+                    status: { $first: "$seller.status" },
+                    totalRevenue: {
+                        $sum: {
+                            $multiply: ["$products.quantity", "$products.product.price"],
+                        },
+                    },
+                    totalOrders: { $sum: 1 },
+                    totalProducts: {
+                        $sum: "$products.quantity",
+                    },
+                },
+            },
+            { $sort: { totalRevenue: -1 } },
+            { $limit: 10 },
+        ]);
+
+        res.json(sellers);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

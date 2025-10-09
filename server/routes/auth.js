@@ -11,7 +11,7 @@ const crypto = require("crypto");
 // SIGN UP
 authRouter.post("/api/signup", async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, latitude, longitude, phoneNumber } = req.body;
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ msg: "Email address already exists" });
@@ -31,6 +31,9 @@ authRouter.post("/api/signup", async (req, res) => {
             type: role || 'user',
             isEmailVerified: false,
             emailVerificationCode: verificationCode,
+            latitude: latitude,
+            longitude: longitude,
+            phoneNumber: phoneNumber,
         });
         user = await user.save();
 
@@ -39,7 +42,7 @@ authRouter.post("/api/signup", async (req, res) => {
         const text = `Your verification code is: ${verificationCode}`;
         await sendEmail(email, subject, text);
 
-        res.json({ msg: "User registered successfully. Verification code sent to email." });
+        res.json({ _id: user._id, msg: "User registered successfully. Verification code sent to email." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

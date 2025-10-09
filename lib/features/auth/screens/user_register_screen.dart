@@ -1,8 +1,10 @@
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_button.dart';
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_textfield.dart';
+import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 class UserRegisterScreen extends StatefulWidget {
   static const String routeName = '/user-register-screen';
@@ -20,6 +22,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   @override
   void dispose() {
@@ -28,16 +31,26 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _nameController.dispose();
+    _phoneController.dispose();
   }
 
-  void signUpUser() {
+  void signUpUser() async {
     if (_signUpFormKey.currentState!.validate()) {
+      // Get current location
+      Position? position = await getCurrentLocation();
+      if (position == null) {
+        showSnackBar(context, 'Unable to get location. Please enable location services.');
+        return;
+      }
       authService.signUpUser(
         context: context,
         email: _emailController.text,
         password: _passwordController.text,
         name: _nameController.text,
         role: 'user',
+        latitude: position.latitude,
+        longitude: position.longitude,
+        phone: _phoneController.text,
         onSuccess: (email, userId) {
           Navigator.pushNamed(
             context,
@@ -81,6 +94,12 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                   textController: _emailController,
                   hintText: 'Email',
                   keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 15),
+                CustomTextField(
+                  textController: _phoneController,
+                  hintText: 'Phone Number',
+                  keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 15),
                 CustomTextField(

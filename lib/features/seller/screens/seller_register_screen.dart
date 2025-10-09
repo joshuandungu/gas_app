@@ -34,6 +34,7 @@ class _SellerRegisterScreenState extends State<SellerRegisterScreen> {
   final TextEditingController _shopDescriptionController =
       TextEditingController();
   final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   dynamic avatarImage;
 
@@ -47,6 +48,7 @@ class _SellerRegisterScreenState extends State<SellerRegisterScreen> {
     _shopNameController.dispose();
     _shopDescriptionController.dispose();
     _addressController.dispose();
+    _phoneController.dispose();
   }
 
   void selectImage() async {
@@ -79,6 +81,7 @@ class _SellerRegisterScreenState extends State<SellerRegisterScreen> {
           password: _passwordController.text,
           name: _nameController.text,
           role: 'seller',
+          phone: _phoneController.text,
           onSuccess: (email, userId) {
             // Second, submit the seller registration request with the new userId
             sellerServices.registerSeller(
@@ -90,6 +93,7 @@ class _SellerRegisterScreenState extends State<SellerRegisterScreen> {
               userId: userId,
               latitude: position.latitude,
               longitude: position.longitude,
+              phone: _phoneController.text,
             );
 
             // Navigate to email verification screen with seller login redirect
@@ -143,6 +147,12 @@ class _SellerRegisterScreenState extends State<SellerRegisterScreen> {
                   textController: _emailController,
                   hintText: 'Email',
                   keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 15),
+                CustomTextField(
+                  textController: _phoneController,
+                  hintText: 'Phone Number',
+                  keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 15),
                 CustomTextField(

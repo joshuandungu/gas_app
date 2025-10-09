@@ -21,8 +21,8 @@ class _TopSellersState extends State<TopSellers> {
   }
 
   void fetchTopSellers() async {
-    // Fetch nearby sellers based on location
-    sellers = await homeServices.fetchNearbyVendors(context: context, radiusInMeters: 10000); // 10km radius
+    // Fetch top sellers based on revenue, filtered by location
+    sellers = await homeServices.fetchTopSellersNearBy(context: context, radiusInMeters: 10000); // 10km radius
     if (mounted) {
       setState(() {});
     }

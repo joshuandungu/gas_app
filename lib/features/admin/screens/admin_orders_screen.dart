@@ -16,6 +16,8 @@ class AdminOrdersScreen extends StatefulWidget {
 class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   List<Order>? orders;
   Map<String, String> usersMap = {};
+  Map<String, String> sellersMap = {};
+  Map<String, String> sellersPhoneMap = {};
   final AdminServices adminServices = AdminServices();
 
   @override
@@ -27,7 +29,10 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   void fetchData() async {
     orders = await adminServices.fetchAllOrders(context);
     List<User> users = await adminServices.fetchUsers(context);
+    List<User> sellers = await adminServices.fetchSellers(context);
     usersMap = {for (var user in users) user.id: user.name};
+    sellersMap = {for (var seller in sellers) seller.id: seller.name};
+    sellersPhoneMap = {for (var seller in sellers) seller.id: seller.phoneNumber};
     setState(() {});
   }
 
@@ -102,8 +107,9 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
         sellerIds.add(product.sellerId);
       }
     }
-    List<String> names = sellerIds.map((id) => usersMap[id] ?? 'Unknown').toList();
-    return names.join(', ');
+    List<String> names = sellerIds.map((id) => sellersMap[id] ?? 'Unknown').toList();
+    List<String> phones = sellerIds.map((id) => sellersPhoneMap[id] ?? 'N/A').toList();
+    return '${names.join(', ')} (${phones.join(', ')})';
   }
 
   String getStatusText(int status) {

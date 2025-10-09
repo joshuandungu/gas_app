@@ -8,7 +8,7 @@ const ratingSchema = require("../models/rating");
 productRouter.get("/api/products", auth, async (req, res) => {
     try {
         const products = await Product.find({ category: req.query.category })
-            .populate('sellerId', 'shopName shopAvatar');
+            .populate('sellerId', 'shopName shopAvatar phoneNumber');
         res.json(products);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -20,7 +20,7 @@ productRouter.get("/api/products/search/:name", auth, async (req, res) => {
     try {
         const products = await Product.find({
             name: { $regex: req.params.name, $options: "i" },
-        }).populate('sellerId', 'shopName shopAvatar');
+        }).populate('sellerId', 'shopName shopAvatar phoneNumber');
         res.json(products);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -81,7 +81,7 @@ productRouter.get("/api/deal-of-day", auth, async (req, res) => {
         'discount.startDate': { $lte: now },
         'discount.endDate': { $gte: now }
       })
-      .populate('sellerId', 'shopName shopAvatar')
+      .populate('sellerId', 'shopName shopAvatar phoneNumber')
       .sort({ 'discount.percentage': -1 }) // Sắp xếp theo phần trăm giảm giá
       .limit(10); // Lấy 10 sản phẩm giảm giá cao nhất
   
@@ -90,7 +90,7 @@ productRouter.get("/api/deal-of-day", auth, async (req, res) => {
       const highRatedProducts = await Product.find({
         _id: { $nin: products.map(p => p._id) }, // Exclude already selected products
       })
-      .populate('sellerId', 'shopName shopAvatar')
+      .populate('sellerId', 'shopName shopAvatar phoneNumber')
       .sort({ avgRating: -1 })
       .limit(remainingCount);
 

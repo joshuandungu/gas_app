@@ -76,7 +76,7 @@ adminRouter.post("/admin/add-product", admin, async (req, res) => {
 // Admin gets all products
 adminRouter.get("/admin/products", admin, async (req, res) => {
     try {
-        const products = await Product.find({});
+        const products = await Product.find({}).populate('sellerId', 'shopName shopAvatar phoneNumber');
         res.json(products);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -134,6 +134,7 @@ adminRouter.post("/admin/process-seller-request", admin, async (req, res) => {
                 shopAvatar: request.avatarUrl,
                 latitude: request.latitude,
                 longitude: request.longitude,
+                phoneNumber: request.phoneNumber,
             });
         }
 

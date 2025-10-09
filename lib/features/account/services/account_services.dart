@@ -21,6 +21,7 @@ class AccountServices {
     BuildContext context, {
     required String name,
     required String email,
+    String? phoneNumber,
     String? address,
     String? shopName,
     String? shopDescription,
@@ -55,6 +56,7 @@ class AccountServices {
       final Map<String, dynamic> body = {
         'name': name,
         'email': email,
+        if (phoneNumber != null) 'phoneNumber': phoneNumber,
         if (address != null) 'address': address,
         if (shopName != null) 'shopName': shopName,
         if (shopDescription != null) 'shopDescription': shopDescription,
@@ -62,7 +64,7 @@ class AccountServices {
       };
 
       http.Response res = await http.post(
-        Uri.parse('$uri/account/update-profile'),
+        Uri.parse('$uri/api/update-profile'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'x-auth-token': userProvider.user.token,
@@ -78,6 +80,7 @@ class AccountServices {
           User newUser = userProvider.user.copyWith(
             name: name,
             email: email,
+            phoneNumber: phoneNumber ?? userProvider.user.phoneNumber,
             address: address ?? userProvider.user.address,
             shopName: shopName ?? userProvider.user.shopName,
             shopDescription:

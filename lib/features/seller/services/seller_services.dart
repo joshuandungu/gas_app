@@ -28,6 +28,7 @@ class SellerServices {
     required String userId,
     required double latitude,
     required double longitude,
+    String? phone,
   }) async {
     String status = '';
     try {
@@ -132,24 +133,33 @@ class SellerServices {
 
       for (int i = 0; i < images.length; i++) {
         CloudinaryResponse res;
-        if (kIsWeb) {
-          // Xử lý cho web platform
-          res = await cloudinary.uploadFile(
-            CloudinaryFile.fromBytesData(
-              images[i], // Uint8List data
-              identifier:
-                  'product_image_${DateTime.now().millisecondsSinceEpoch}_$i',
-              folder: name,
-              resourceType: CloudinaryResourceType.Image,
-            ),
-          );
-        } else {
-          // Xử lý cho mobile platform
-          res = await cloudinary.uploadFile(
-            CloudinaryFile.fromFile((images[i] as File).path, folder: name),
-          );
+        try {
+          if (kIsWeb) {
+            // Xử lý cho web platform
+            res = await cloudinary.uploadFile(
+              CloudinaryFile.fromBytesData(
+                images[i], // Uint8List data
+                identifier:
+                    'product_image_${DateTime.now().millisecondsSinceEpoch}_$i',
+                folder: name,
+                resourceType: CloudinaryResourceType.Image,
+              ),
+            );
+          } else {
+            // Xử lý cho mobile platform
+            final file = images[i] as File;
+            if (file.path.isEmpty) {
+              throw Exception('File path is empty for image $i');
+            }
+            res = await cloudinary.uploadFile(
+              CloudinaryFile.fromFile(file.path, folder: name),
+            );
+          }
+          imageUrls.add(res.secureUrl);
+        } catch (e) {
+          showSnackBar(context, 'Failed to upload image $i: $e');
+          return false;
         }
-        imageUrls.add(res.secureUrl);
       }
       Product product = Product(
         name: name,

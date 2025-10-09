@@ -20,6 +20,9 @@ class AuthService {
     required String password,
     required String name,
     required String role,
+    double? latitude,
+    double? longitude,
+    String? phone,
     Function(String email, String userId)? onSuccess,
   }) async {
     if (!(await hasInternetConnection())) {
@@ -34,6 +37,9 @@ class AuthService {
           'email': email,
           'password': password,
           'role': role,
+          'latitude': latitude,
+          'longitude': longitude,
+          'phoneNumber': phone,
         }),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',

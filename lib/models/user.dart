@@ -17,6 +17,7 @@ class User {
   final List<String> following; // Thêm field mới
   final double latitude;
   final double longitude;
+  final String phoneNumber;
 
   User({
     required this.id,
@@ -35,6 +36,7 @@ class User {
     this.following = const [],
     this.latitude = 0.0,
     this.longitude = 0.0,
+    this.phoneNumber = '',
   });
 
   Map<String, dynamic> toMap() {
@@ -55,6 +57,7 @@ class User {
       'following': following,
       'latitude': latitude,
       'longitude': longitude,
+      'phoneNumber': phoneNumber,
     };
   }
 
@@ -79,6 +82,7 @@ class User {
       following: List<String>.from(map['following'] ?? []), // Convert following
       latitude: (map['latitude'] ?? 0.0).toDouble(),
       longitude: (map['longitude'] ?? 0.0).toDouble(),
+      phoneNumber: map['phoneNumber'] ?? '',
     );
   }
 
@@ -103,6 +107,7 @@ class User {
     List<String>? following,
     double? latitude,
     double? longitude,
+    String? phoneNumber,
   }) {
     return User(
       id: id ?? this.id,
@@ -121,6 +126,7 @@ class User {
       following: following ?? this.following,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
     );
   }
 

@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:ecommerce_app_fluterr_nodejs/models/rating.dart';
 
-
 class Discount {
   final double percentage;
   final DateTime? startDate;
@@ -25,12 +24,12 @@ class Discount {
   factory Discount.fromMap(Map<String, dynamic> map) {
     return Discount(
       percentage: map['percentage']?.toDouble() ?? 0.0,
-      startDate: map['startDate'] != null ? DateTime.parse(map['startDate']) : null,
+      startDate:
+          map['startDate'] != null ? DateTime.parse(map['startDate']) : null,
       endDate: map['endDate'] != null ? DateTime.parse(map['endDate']) : null,
     );
   }
 }
-
 
 class Product {
   final String name;
@@ -43,6 +42,7 @@ class Product {
   final String sellerId;
   final String? sellerName;
   final String? sellerEmail;
+  final String? sellerPhone;
   final List<Rating>? ratings;
   final double? avgRating;
   final String? shopName;
@@ -60,6 +60,7 @@ class Product {
     required this.sellerId,
     this.sellerName,
     this.sellerEmail,
+    this.sellerPhone,
     this.ratings,
     this.avgRating,
     this.shopName,
@@ -77,9 +78,10 @@ class Product {
       'category': category,
       'price': price,
       '_id': id,
-      'sellerId': sellerId, 
+      'sellerId': sellerId,
       'sellerName': sellerName,
       'sellerEmail': sellerEmail,
+      'sellerPhone': sellerPhone,
       'ratings': ratings,
       'avgRating': avgRating,
       'shopName': shopName,
@@ -99,9 +101,15 @@ class Product {
       category: map['category'] ?? '',
       price: map['price']?.toDouble() ?? 0.0,
       id: map['_id'],
-      sellerId: map['sellerId'] is Map ? map['sellerId']['_id'].toString() : (map['sellerId'] ?? ''),
-      sellerName: map['sellerId'] is Map ? map['sellerId']['name']?.toString() : null,
-      sellerEmail: map['sellerId'] is Map ? map['sellerId']['email']?.toString() : null,
+      sellerId: map['sellerId'] is Map
+          ? map['sellerId']['_id'].toString()
+          : (map['sellerId'] ?? ''),
+      sellerName:
+          map['sellerId'] is Map ? map['sellerId']['name']?.toString() : null,
+      sellerEmail:
+          map['sellerId'] is Map ? map['sellerId']['email']?.toString() : null,
+      sellerPhone:
+          map['sellerId'] is Map ? map['sellerId']['phoneNumber']?.toString() : null,
       ratings: map['ratings'] != null
           ? List<Rating>.from(
               map['ratings']?.map(
@@ -110,10 +118,16 @@ class Product {
             )
           : null,
       avgRating: map['avgRating']?.toDouble() ?? 0.0,
-      shopName: map['sellerId'] is Map ? map['sellerId']['shopName']?.toString() : map['shopName'],
-      shopAvatar: map['sellerId'] is Map ? map['sellerId']['shopAvatar']?.toString() : map['shopAvatar'],
-      discount: map['discount'] != null ? Discount.fromMap(map['discount']) : null,
-      finalPrice: map['finalPrice']?.toDouble() ?? map['price']?.toDouble() ?? 0.0,
+      shopName: map['sellerId'] is Map
+          ? map['sellerId']['shopName']?.toString()
+          : map['shopName'],
+      shopAvatar: map['sellerId'] is Map
+          ? map['sellerId']['shopAvatar']?.toString()
+          : map['shopAvatar'],
+      discount:
+          map['discount'] != null ? Discount.fromMap(map['discount']) : null,
+      finalPrice:
+          map['finalPrice']?.toDouble() ?? map['price']?.toDouble() ?? 0.0,
     );
   }
 

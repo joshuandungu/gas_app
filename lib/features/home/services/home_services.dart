@@ -129,4 +129,48 @@ class HomeServices {
     }
     return sellers;
   }
+
+  Future<List<User>> fetchTopSellersNearBy({
+    required BuildContext context,
+    required double radiusInMeters,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<User> topSellers = [];
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/api/best-sellers'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          for (var sellerData in jsonDecode(res.body)) {
+            topSellers.add(User.fromMap(sellerData));
+          }
+        },
+      );
+
+      try {
+        Position position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high);
+
+        LocationFilterService locationFilterService = LocationFilterService();
+        topSellers = await locationFilterService.filterVendorsByLocation(
+            buyerPosition: position,
+            vendors: topSellers,
+            radiusInMeters: radiusInMeters);
+      } catch (locationError) {
+        // If location fails, return the top sellers without filtering
+        // No need to show error for location, just fallback
+      }
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return topSellers;
+  }
 }

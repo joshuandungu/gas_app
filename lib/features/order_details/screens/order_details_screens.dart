@@ -342,6 +342,14 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                                   fontSize: 14,
                                 ),
                               ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Phone: ${widget.order.products[index].sellerPhone ?? 'N/A'}',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
+                                ),
+                              ),
                             ],
                           ),
                         ),

@@ -20,6 +20,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
+  late TextEditingController _phoneController;
   late TextEditingController _addressController;
   late TextEditingController _shopNameController;
   late TextEditingController _shopDescriptionController;
@@ -32,6 +33,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = Provider.of<UserProvider>(context, listen: false).user;
     _nameController = TextEditingController(text: user.name);
     _emailController = TextEditingController(text: user.email);
+    _phoneController = TextEditingController(text: user.phoneNumber);
     _addressController = TextEditingController(text: user.address);
     _shopNameController = TextEditingController(text: user.shopName);
     _shopDescriptionController =
@@ -42,6 +44,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _addressController.dispose();
     _shopNameController.dispose();
     _shopDescriptionController.dispose();
@@ -73,6 +76,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           context,
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
           shopName: _shopNameController.text.trim(),
           shopDescription: _shopDescriptionController.text.trim(),
           newAvatar: _avatarImage,
@@ -82,6 +86,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           context,
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
           address: _addressController.text.trim(),
         );
       }
@@ -140,6 +145,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     }
                     return null;
                   },
+                ),
+                TextFormField(
+                  controller: _phoneController,
+                  decoration: const InputDecoration(labelText: 'Phone Number'),
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Please enter your phone number'
+                      : null,
                 ),
                 if (user.type != 'seller') ...[
                   TextFormField(
