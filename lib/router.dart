@@ -3,9 +3,9 @@ import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/edit_profi
 import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/orders_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/seller_registration_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/address_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/set_address.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_register_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/add_product_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_detail_screen.dart'; // This path is correct
@@ -14,11 +14,8 @@ import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_list_scr
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/set_discount_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/shop_profile_screen.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/shop_profile_screen.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_register_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/update_product_screen.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/auth_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/user_register_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/user_email_verification_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_email_verification_screen.dart';
@@ -35,10 +32,11 @@ import 'package:flutter/material.dart';
 
 Route<dynamic> generateRoute(RouteSettings routeSettings) {
   switch (routeSettings.name) {
-    case AuthScreen.routeName:
+    case LoginScreen.routeName:
+      var role = routeSettings.arguments as String;
       return MaterialPageRoute(
         settings: routeSettings,
-        builder: (_) => const AuthScreen(),
+        builder: (_) => LoginScreen(role: role),
       );
     case UserRegisterScreen.routeName:
       return MaterialPageRoute(
@@ -101,20 +99,10 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         settings: routeSettings,
         builder: (_) => const AdminScreen(),
       );
-    case AdminLoginScreen.routeName:
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => const AdminLoginScreen(),
-      );
     case AdminRegisterScreen.routeName:
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => const AdminRegisterScreen(),
-      );
-    case SellerLoginScreen.routeName:
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => const SellerLoginScreen(),
       );
     case SellerRegisterScreen.routeName:
       return MaterialPageRoute(

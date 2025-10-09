@@ -161,4 +161,34 @@ authRouter.post("/api/verify-email", async (req, res) => {
     }
 });
 
+authRouter.post("/api/resend-verification-code", async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({ msg: "This email is not registered!" });
+        }
+
+        if (user.isEmailVerified) {
+            return res.status(400).json({ msg: "This email is already verified." });
+        }
+
+        // Generate a new 6-digit verification code
+        const verificationCode = crypto.randomInt(100000, 999999).toString();
+        user.emailVerificationCode = verificationCode;
+        await user.save();
+
+        // Send verification code email
+        const subject = "Your New Email Verification Code";
+        const text = `Your new verification code is: ${verificationCode}`;
+        await sendEmail(email, subject, text);
+
+        res.json({ msg: "Verification code has been resent successfully!" });
+
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 module.exports = authRouter;

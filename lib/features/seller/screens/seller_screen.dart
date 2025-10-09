@@ -2,7 +2,7 @@ import 'package:ecommerce_app_fluterr_nodejs/common/widgets/bottom_bar.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/edit_profile_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_login_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/analytics_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/chat/services/chat_service.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_chat_list_screen.dart';
@@ -90,7 +90,12 @@ class _SellerScreenState extends State<SellerScreen> {
                           arguments: userProvider.user.id),
                       child: CircleAvatar(
                         radius: 25,
-                        backgroundImage: NetworkImage(shopOwner!.shopAvatar),
+                        backgroundImage: shopOwner!.shopAvatar.isNotEmpty
+                            ? NetworkImage(shopOwner!.shopAvatar)
+                            : null,
+                        child: shopOwner!.shopAvatar.isEmpty
+                            ? const Icon(Icons.storefront, size: 25)
+                            : null,
                       ),
                     ),
                     Expanded(
@@ -110,7 +115,8 @@ class _SellerScreenState extends State<SellerScreen> {
                       offset: const Offset(0, 5),
                       onSelected: (value) {
                         if (value == 'profile') {
-                          Navigator.pushNamed(context, EditProfileScreen.routeName);
+                          Navigator.pushNamed(
+                              context, EditProfileScreen.routeName);
                         } else if (value == 'homepage') {
                           Navigator.pushNamedAndRemoveUntil(
                             context,
@@ -121,8 +127,8 @@ class _SellerScreenState extends State<SellerScreen> {
                         } else if (value == 'logout') {
                           AccountServices().logOut(
                             context,
-                            logoutRedirectRouteName:
-                                SellerLoginScreen.routeName,
+                            logoutRedirectRouteName: LoginScreen.routeName,
+                            role: 'seller',
                           );
                         }
                       },

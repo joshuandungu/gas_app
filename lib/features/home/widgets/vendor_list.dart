@@ -82,8 +82,13 @@ class _VendorListState extends State<VendorList> {
                           ),
                         ),
                         child: CircleAvatar(
-                          backgroundImage: NetworkImage(vendor.shopAvatar),
                           radius: 40,
+                          backgroundImage: vendor.shopAvatar.isNotEmpty
+                              ? NetworkImage(vendor.shopAvatar)
+                              : null,
+                          child: vendor.shopAvatar.isEmpty
+                              ? const Icon(Icons.storefront, size: 40)
+                              : null,
                         ),
                       ),
                       const SizedBox(height: 5),

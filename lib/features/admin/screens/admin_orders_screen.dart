@@ -1,6 +1,7 @@
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/services/admin_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';
+import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -14,22 +15,25 @@ class AdminOrdersScreen extends StatefulWidget {
 
 class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   List<Order>? orders;
+  Map<String, String> usersMap = {};
   final AdminServices adminServices = AdminServices();
 
   @override
   void initState() {
     super.initState();
-    fetchOrders();
+    fetchData();
   }
 
-  void fetchOrders() async {
+  void fetchData() async {
     orders = await adminServices.fetchAllOrders(context);
+    List<User> users = await adminServices.fetchUsers(context);
+    usersMap = {for (var user in users) user.id: user.name};
     setState(() {});
   }
 
   void changeOrderStatus(Order order, int status) async {
     adminServices.changeOrderStatus(context: context, id: order.id!, status: status);
-    fetchOrders();
+    fetchData();
   }
 
   @override
@@ -67,6 +71,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text('Buyer: ${usersMap[order.userId] ?? 'Unknown'}'),
+                            Text('Vendor(s): ${getVendorNames(order)}'),
                             Text('Total: \$${order.totalPrice}'),
                             Text('Status: ${getStatusText(order.status)}'),
                             Text('Ordered At: ${DateFormat.yMMMd().format(DateTime.fromMillisecondsSinceEpoch(order.orderedAt))}'),
@@ -87,6 +93,17 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                   },
                 ),
     );
+  }
+
+  String getVendorNames(Order order) {
+    Set<String> sellerIds = {};
+    for (var product in order.products) {
+      if (product.sellerId.isNotEmpty) {
+        sellerIds.add(product.sellerId);
+      }
+    }
+    List<String> names = sellerIds.map((id) => usersMap[id] ?? 'Unknown').toList();
+    return names.join(', ');
   }
 
   String getStatusText(int status) {

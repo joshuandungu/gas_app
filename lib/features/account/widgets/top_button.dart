@@ -3,10 +3,8 @@ import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/seller_reg
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/widgets/account_button.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/set_address.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_login_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/sellers_screen.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -51,17 +49,20 @@ class TopButton extends StatelessWidget {
             AccountButton(
               text: 'Log Out',
               onTap: () {
-                String logoutRedirectRouteName;
+                String logoutRedirectRouteName = LoginSelectionScreen.routeName;
+                String? role;
+
                 if (user.type == 'seller') {
-                  logoutRedirectRouteName = SellerLoginScreen.routeName;
+                  logoutRedirectRouteName = LoginScreen.routeName;
+                  role = 'seller';
                 } else if (user.type == 'admin') {
-                  logoutRedirectRouteName = AdminLoginScreen.routeName;
-                } else {
-                  logoutRedirectRouteName = LoginSelectionScreen.routeName;
+                  logoutRedirectRouteName = LoginScreen.routeName;
+                  role = 'admin';
                 }
                 AccountServices().logOut(
                   context,
                   logoutRedirectRouteName: logoutRedirectRouteName,
+                  role: role,
                 );
               },
             ),

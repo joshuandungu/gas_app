@@ -11,6 +11,7 @@ import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/product.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
+import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -23,7 +24,10 @@ class SellerServices {
     required String shopDescription,
     required String address,
     required dynamic avatar,
+    bool popOnSuccess = false,
     required String userId,
+    required double latitude,
+    required double longitude,
   }) async {
     String status = '';
     try {
@@ -59,6 +63,8 @@ class SellerServices {
           'userId': userId,
           'address': address,
           'avatarUrl': avatarRes.secureUrl,
+          'latitude': latitude,
+          'longitude': longitude,
         }),
       );
 
@@ -71,7 +77,9 @@ class SellerServices {
             context,
             'Seller registration request sent successfully!',
           );
-          Navigator.pop(context); // Go back to login after successful request
+          if (popOnSuccess) {
+            Navigator.pop(context);
+          }
         },
       );
     } catch (e) {

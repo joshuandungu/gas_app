@@ -87,10 +87,12 @@ class _AdminEmailVerificationScreenState
       return;
     }
 
-    // For now, we'll just show a message since resend functionality
-    // might need to be implemented on the server side
-    showSnackBar(context, "Please check your email for the verification code");
-    _startResendCooldown();
+    // Call the auth service to resend the code
+    authService.resendVerificationCode(
+      context: context,
+      email: widget.email,
+    );
+    _startResendCooldown(); // Start cooldown after initiating resend
   }
 
   @override

@@ -318,6 +318,30 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Shop Name: ${widget.order.products[index].shopName ?? 'N/A'}',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Owner: ${widget.order.products[index].sellerName ?? 'N/A'}',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Email: ${widget.order.products[index].sellerEmail ?? 'N/A'}',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
+                                ),
+                              ),
                             ],
                           ),
                         ),

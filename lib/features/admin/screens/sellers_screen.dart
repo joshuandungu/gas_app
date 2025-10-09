@@ -35,6 +35,16 @@ class _SellersScreenState extends State<SellersScreen> {
     );
   }
 
+  void activateSeller(String sellerId) {
+    adminServices.activateSeller(
+      context: context,
+      sellerId: sellerId,
+      onSuccess: () {
+        fetchSellers();
+      },
+    );
+  }
+
   void deleteSeller(String sellerId) {
     adminServices.deleteSeller(
       context: context,
@@ -56,18 +66,44 @@ class _SellersScreenState extends State<SellersScreen> {
                 final seller = sellers![index];
                 return ListTile(
                   title: Text(seller.name),
-                  subtitle: Text(seller.email),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(seller.email),
+                      Text('Role: Seller'),
+                      Text(
+                        'Status: ${seller.status}',
+                        style: TextStyle(
+                          color: seller.status == 'active'
+                              ? Colors.green
+                              : seller.status == 'suspended'
+                                  ? Colors.red
+                                  : Colors.orange,
+                        ),
+                      ),
+                    ],
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        onPressed: () => suspendSeller(seller.id),
-                        icon: const Icon(
-                          Icons.pause,
-                          color: Colors.orange,
+                      if (seller.status == 'active')
+                        ElevatedButton.icon(
+                          onPressed: () => suspendSeller(seller.id),
+                          icon: const Icon(Icons.pause, color: Colors.white),
+                          label: const Text('Suspend'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                          ),
+                        )
+                      else if (seller.status == 'suspended')
+                        ElevatedButton.icon(
+                          onPressed: () => activateSeller(seller.id),
+                          icon: const Icon(Icons.play_arrow, color: Colors.white),
+                          label: const Text('Activate'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
                         ),
-                        tooltip: 'Suspend Seller',
-                      ),
                       IconButton(
                         onPressed: () => deleteSeller(seller.id),
                         icon: const Icon(
@@ -78,6 +114,7 @@ class _SellersScreenState extends State<SellersScreen> {
                       ),
                     ],
                   ),
+                  isThreeLine: true,
                 );
               },
             ),

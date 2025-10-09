@@ -16,7 +16,7 @@ const Notification = require('../models/notification');
 // Register as seller
 sellerRouter.post('/api/register-seller', async (req, res) => {
     try {
-        const { shopName, shopDescription, address, avatarUrl, userId } = req.body;
+        const { shopName, shopDescription, address, avatarUrl, userId, latitude, longitude } = req.body;
 
         if (!shopName || !shopDescription || !address || !avatarUrl || !userId) {
             return res.status(400).json({ msg: "All fields are required" });
@@ -51,6 +51,8 @@ sellerRouter.post('/api/register-seller', async (req, res) => {
             shopDescription,
             address,
             avatarUrl,
+            latitude,
+            longitude,
         });
 
         await sellerRequest.save();

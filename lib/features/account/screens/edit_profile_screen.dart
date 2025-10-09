@@ -1,7 +1,12 @@
+import 'dart:io';
+
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
+import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class EditProfileScreen extends StatefulWidget {
   static const String routeName = '/edit-profile';
@@ -18,8 +23,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _addressController;
   late TextEditingController _shopNameController;
   late TextEditingController _shopDescriptionController;
-  late TextEditingController _shopAvatarController;
   bool _isLoading = false;
+  dynamic _avatarImage;
 
   @override
   void initState() {
@@ -29,8 +34,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _emailController = TextEditingController(text: user.email);
     _addressController = TextEditingController(text: user.address);
     _shopNameController = TextEditingController(text: user.shopName);
-    _shopDescriptionController = TextEditingController(text: user.shopDescription);
-    _shopAvatarController = TextEditingController(text: user.shopAvatar);
+    _shopDescriptionController =
+        TextEditingController(text: user.shopDescription);
   }
 
   @override
@@ -40,8 +45,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _addressController.dispose();
     _shopNameController.dispose();
     _shopDescriptionController.dispose();
-    _shopAvatarController.dispose();
     super.dispose();
+  }
+
+  void _selectImage() async {
+    var res = await pickImage();
+    if (res != null) {
+      setState(() {
+        _avatarImage = res;
+      });
+    }
   }
 
   void _updateProfile() async {
@@ -62,7 +75,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           email: _emailController.text.trim(),
           shopName: _shopNameController.text.trim(),
           shopDescription: _shopDescriptionController.text.trim(),
-          shopAvatar: _shopAvatarController.text.trim(),
+          newAvatar: _avatarImage,
         );
       } else {
         await accountServices.updateUserProfile(
@@ -110,8 +123,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(labelText: 'Name'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Please enter your name' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Please enter your name'
+                      : null,
                 ),
                 TextFormField(
                   controller: _emailController,
@@ -131,36 +145,66 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   TextFormField(
                     controller: _addressController,
                     decoration: const InputDecoration(labelText: 'Address'),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Please enter your address' : null,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please enter your address'
+                        : null,
                   ),
                 ],
                 if (user.type == 'seller') ...[
                   TextFormField(
                     controller: _shopNameController,
                     decoration: const InputDecoration(labelText: 'Shop Name'),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Please enter your shop name' : null,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please enter your shop name'
+                        : null,
                   ),
                   TextFormField(
                     controller: _shopDescriptionController,
-                    decoration: const InputDecoration(labelText: 'Shop Description'),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Please enter your shop description' : null,
+                    decoration:
+                        const InputDecoration(labelText: 'Shop Description'),
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please enter your shop description'
+                        : null,
                   ),
-                  TextFormField(
-                    controller: _shopAvatarController,
-                    decoration: const InputDecoration(labelText: 'Shop Avatar URL'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your shop avatar URL';
-                      }
-                      final urlRegex = RegExp(r'^https?://');
-                      if (!urlRegex.hasMatch(value)) {
-                        return 'Please enter a valid URL';
-                      }
-                      return null;
-                    },
+                  const SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: _selectImage,
+                    child: DottedBorder(
+                      borderType: BorderType.RRect,
+                      radius: const Radius.circular(10),
+                      dashPattern: const [10, 4],
+                      strokeCap: StrokeCap.round,
+                      child: Container(
+                        width: double.infinity,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: _avatarImage != null
+                            ? (kIsWeb
+                                ? Image.memory(_avatarImage, fit: BoxFit.cover)
+                                : Image.file(_avatarImage as File,
+                                    fit: BoxFit.cover))
+                            : (user.shopAvatar.isNotEmpty
+                                ? Image.network(user.shopAvatar,
+                                    fit: BoxFit.cover)
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.folder_open,
+                                        size: 40,
+                                      ),
+                                      const SizedBox(height: 15),
+                                      Text(
+                                        'Upload New Shop Logo',
+                                        style: TextStyle(
+                                            color: Colors.grey.shade400),
+                                      ),
+                                    ],
+                                  )),
+                      ),
+                    ),
                   ),
                 ],
                 const SizedBox(height: 20),

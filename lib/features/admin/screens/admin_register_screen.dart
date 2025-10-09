@@ -37,7 +37,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
         password: _passwordController.text,
         name: _nameController.text,
         role: 'admin',
-        onSuccess: (email) {
+        onSuccess: (email, userId) {
           // Navigate to admin email verification screen
           Navigator.pushNamed(
             context,

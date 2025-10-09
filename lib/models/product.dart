@@ -41,6 +41,8 @@ class Product {
   final double price;
   final String? id;
   final String sellerId;
+  final String? sellerName;
+  final String? sellerEmail;
   final List<Rating>? ratings;
   final double? avgRating;
   final String? shopName;
@@ -56,6 +58,8 @@ class Product {
     required this.price,
     this.id,
     required this.sellerId,
+    this.sellerName,
+    this.sellerEmail,
     this.ratings,
     this.avgRating,
     this.shopName,
@@ -74,11 +78,13 @@ class Product {
       'price': price,
       '_id': id,
       'sellerId': sellerId, 
+      'sellerName': sellerName,
+      'sellerEmail': sellerEmail,
       'ratings': ratings,
       'avgRating': avgRating,
       'shopName': shopName,
       'shopAvatar': shopAvatar,
-       'discount': discount?.toMap(),
+      'discount': discount?.toMap(),
       'finalPrice': finalPrice,
     };
   }
@@ -94,6 +100,8 @@ class Product {
       price: map['price']?.toDouble() ?? 0.0,
       id: map['_id'],
       sellerId: map['sellerId'] is Map ? map['sellerId']['_id'].toString() : (map['sellerId'] ?? ''),
+      sellerName: map['sellerId'] is Map ? map['sellerId']['name']?.toString() : null,
+      sellerEmail: map['sellerId'] is Map ? map['sellerId']['email']?.toString() : null,
       ratings: map['ratings'] != null
           ? List<Rating>.from(
               map['ratings']?.map(

@@ -21,9 +21,8 @@ class _TopSellersState extends State<TopSellers> {
   }
 
   void fetchTopSellers() async {
-    // NOTE: This assumes a `fetchTopSellers` method exists in your HomeServices
-    // to retrieve a list of sellers.
-    sellers = await homeServices.fetchTopSellers(context);
+    // Fetch nearby sellers based on location
+    sellers = await homeServices.fetchNearbyVendors(context: context, radiusInMeters: 10000); // 10km radius
     if (mounted) {
       setState(() {});
     }
@@ -52,9 +51,10 @@ class _TopSellersState extends State<TopSellers> {
         const SizedBox(height: 10),
         SizedBox(
           height: 100,
-          child: ListView.builder(
+          child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: sellers!.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final seller = sellers![index];
               return GestureDetector(
@@ -67,7 +67,7 @@ class _TopSellersState extends State<TopSellers> {
                 },
                 child: Padding(
                   padding: EdgeInsets.only(
-                      left: index == 0 ? 15.0 : 10.0,
+                      left: index == 0 ? 15.0 : 0,
                       right: index == sellers!.length - 1 ? 15.0 : 0),
                   child: Column(
                     children: [

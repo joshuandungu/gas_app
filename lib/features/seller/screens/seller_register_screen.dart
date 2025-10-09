@@ -5,9 +5,11 @@ import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_textfield.dar
 import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/services/auth_service.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/services/seller_services.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:geolocator/geolocator.dart';
 
 class SellerRegisterScreen extends StatefulWidget {
   static const String routeName = '/seller-register-screen';
@@ -56,30 +58,50 @@ class _SellerRegisterScreenState extends State<SellerRegisterScreen> {
     }
   }
 
-  void signUpSeller() {
+  void signUpSeller() async {
     if (_signUpFormKey.currentState!.validate() && avatarImage != null) {
       setState(() {
         _isLoading = true;
       });
-      // First, sign up the user
+      // Get current location
+      Position? position = await getCurrentLocation();
+      if (position == null) {
+        showSnackBar(context, 'Unable to get location. Please enable location services.');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      // First, sign up the user to get a userId
       authService.signUpUser(
           context: context,
           email: _emailController.text,
           password: _passwordController.text,
           name: _nameController.text,
           role: 'seller',
-          onSuccess: (email) {
+          onSuccess: (email, userId) {
+            // Second, submit the seller registration request with the new userId
+            sellerServices.registerSeller(
+              context: context,
+              shopName: _shopNameController.text,
+              shopDescription: _shopDescriptionController.text,
+              address: _addressController.text,
+              avatar: avatarImage!,
+              userId: userId,
+              latitude: position.latitude,
+              longitude: position.longitude,
+            );
+
             // Navigate to email verification screen with seller login redirect
             Navigator.pushNamed(
               context,
               '/user-email-verification-screen',
               arguments: {
                 'email': email,
-                'redirectRoute': '/seller-login-screen', // Redirect to seller login after verification
+                'redirectRoute': LoginScreen.routeName,
+                'role': 'seller',
               },
             );
-            // Note: After email verification, user will need to sign in manually
-            // and then complete seller registration
             setState(() {
               _isLoading = false;
             });
@@ -208,7 +230,8 @@ class _SellerRegisterScreenState extends State<SellerRegisterScreen> {
                     const Text("Already have a seller account? "),
                     InkWell(
                       onTap: () {
-                        Navigator.pop(context);
+                        Navigator.pushNamed(context, LoginScreen.routeName,
+                            arguments: 'seller');
                       },
                       child: Text(
                         'Log In',

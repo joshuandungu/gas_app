@@ -7,6 +7,7 @@ class User {
   final String password;
   final String address;
   final String type;
+  final String status;
   final String token;
   final List<dynamic> cart;
   final String shopName;
@@ -14,6 +15,8 @@ class User {
   final String shopAvatar;
   final List<String> followers; // Thêm field mới
   final List<String> following; // Thêm field mới
+  final double latitude;
+  final double longitude;
 
   User({
     required this.id,
@@ -22,6 +25,7 @@ class User {
     required this.password,
     required this.address,
     required this.type,
+    required this.status,
     required this.token,
     required this.cart,
     this.shopName = '',
@@ -29,6 +33,8 @@ class User {
     this.shopAvatar = '',
     this.followers = const [],
     this.following = const [],
+    this.latitude = 0.0,
+    this.longitude = 0.0,
   });
 
   Map<String, dynamic> toMap() {
@@ -39,6 +45,7 @@ class User {
       'password': password,
       'address': address,
       'type': type,
+      'status': status,
       'token': token,
       'cart': cart,
       'shopName': shopName,
@@ -46,6 +53,8 @@ class User {
       'shopAvatar': shopAvatar,
       'followers': followers,
       'following': following,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
@@ -57,6 +66,7 @@ class User {
       password: map['password'] ?? '',
       address: map['address'] ?? '',
       type: map['type'] ?? '',
+      status: map['status'] ?? '',
       token: map['token'] ?? '',
       // If map['cart'] is null, use an empty list as a fallback.
       cart: List<Map<String, dynamic>>.from((map['cart'] ?? []).map(
@@ -67,6 +77,8 @@ class User {
       shopAvatar: map['shopAvatar'] ?? '',
       followers: List<String>.from(map['followers'] ?? []), // Convert followers
       following: List<String>.from(map['following'] ?? []), // Convert following
+      latitude: (map['latitude'] ?? 0.0).toDouble(),
+      longitude: (map['longitude'] ?? 0.0).toDouble(),
     );
   }
 
@@ -81,6 +93,7 @@ class User {
     String? password,
     String? address,
     String? type,
+    String? status,
     String? token,
     List<dynamic>? cart,
     String? shopName,
@@ -88,7 +101,8 @@ class User {
     String? shopAvatar,
     List<String>? followers,
     List<String>? following,
-    required phoneNumber,
+    double? latitude,
+    double? longitude,
   }) {
     return User(
       id: id ?? this.id,
@@ -97,6 +111,7 @@ class User {
       password: password ?? this.password,
       address: address ?? this.address,
       type: type ?? this.type,
+      status: status ?? this.status,
       token: token ?? this.token,
       cart: cart ?? this.cart,
       shopName: shopName ?? this.shopName,
@@ -104,6 +119,8 @@ class User {
       shopAvatar: shopAvatar ?? this.shopAvatar,
       followers: followers ?? this.followers,
       following: following ?? this.following,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
     );
   }
 

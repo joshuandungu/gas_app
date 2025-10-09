@@ -39,7 +39,6 @@ class AddressServices {
           final data = jsonDecode(res.body);
           User user = userProvider.user.copyWith(
             address: data['address'],
-            phoneNumber: data['phoneNumber'],
           );
           userProvider.setUserFromModel(user);
         },
@@ -516,7 +515,6 @@ class AddressServices {
 
     User user = userProvider.user.copyWith(
       cart: updatedCart,
-      phoneNumber: null,
     );
     userProvider.setUserFromModel(user);
   }

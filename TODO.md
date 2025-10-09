@@ -3,4 +3,27 @@
 - [x] Update android/settings.gradle: change kotlin version from 1.8.22 to 1.9.10
 - [x] Set app icon to reflect that of a gas burner
 - [x] Change carousel images to online links for mobiles, appliances, essentials, books, fashion, and gas products
+- [x] Add location permissions in AndroidManifest.xml
+- [x] Add geolocator package in pubspec.yaml
+- [x] Add latitude and longitude to User model
+- [x] Create LocationFilterService
+- [x] Add fetchNearbyVendors method in HomeServices
+- [x] Fix copyWith calls to remove phoneNumber parameter
+- [x] Add connectivity_plus package to pubspec.yaml
+- [x] Create hasInternetConnection utility function
+- [x] Add internet connectivity check in AuthService methods
+- [x] Update User model to include status field
+- [x] Update UserProvider to include status
+- [x] Update server User model to have status enum with default 'pending'
+- [x] Add approve-user API endpoint in admin routes
+- [x] Add approveUser method in AdminServices
+- [x] Update UsersScreen to show status and approve button for pending users
+- [x] Update signInUser to check status and show message if pending
+- [x] Enable location detection for buyers and vendors
+- [x] Update SellerRequest model to include latitude and longitude
+- [x] Update register-seller API to accept and save location
+- [x] Update process-seller-request to set location on user approval
+- [x] Update seller registration screens to get current location
+- [x] Update TopSellers widget to fetch nearby vendors instead of all sellers
+- [x] Fix GlobalKey duplication error in TopSellers widget
 - [ ] Run flutter build apk to verify the changes

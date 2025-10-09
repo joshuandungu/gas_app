@@ -25,6 +25,16 @@ class _UsersScreenState extends State<UsersScreen> {
     setState(() {});
   }
 
+  void approveUser(String userId) {
+    adminServices.approveUser(
+      context: context,
+      userId: userId,
+      onSuccess: () {
+        fetchUsers();
+      },
+    );
+  }
+
   void suspendUser(String userId) {
     adminServices.suspendUser(
       context: context,
@@ -59,18 +69,53 @@ class _UsersScreenState extends State<UsersScreen> {
                 final user = users![index];
                 return ListTile(
                   title: Text(user.name),
-                  subtitle: Text(user.email),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(user.email),
+                      Text('Role: ${user.type}'),
+                      Text(
+                        'Status: ${user.status}',
+                        style: TextStyle(
+                          color: user.status == 'pending'
+                              ? Colors.orange
+                              : user.status == 'active'
+                                  ? Colors.green
+                                  : Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        onPressed: () => suspendUser(user.id),
-                        icon: const Icon(
-                          Icons.pause,
-                          color: Colors.orange,
+                      if (user.status == 'pending')
+                        ElevatedButton.icon(
+                          onPressed: () => approveUser(user.id),
+                          icon: const Icon(Icons.check_circle, color: Colors.white),
+                          label: const Text('Approve'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
                         ),
-                        tooltip: 'Suspend User',
-                      ),
+                      if (user.status == 'active')
+                        ElevatedButton.icon(
+                          onPressed: () => suspendUser(user.id),
+                          icon: const Icon(Icons.pause, color: Colors.white),
+                          label: const Text('Suspend'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                          ),
+                        ),
+                      if (user.status == 'suspended')
+                        ElevatedButton.icon(
+                          onPressed: () => approveUser(user.id),
+                          icon: const Icon(Icons.play_arrow, color: Colors.white),
+                          label: const Text('Activate'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                          ),
+                        ),
                       IconButton(
                         onPressed: () => deleteUser(user.id),
                         icon: const Icon(
@@ -81,6 +126,7 @@ class _UsersScreenState extends State<UsersScreen> {
                       ),
                     ],
                   ),
+                  isThreeLine: true,
                 );
               },
             ),

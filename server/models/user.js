@@ -44,8 +44,8 @@ const userSchema = mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['active', 'suspended', 'deleted'],
-        default: "active",
+        enum: ['pending', 'active', 'suspended', 'deleted'],
+        default: "pending",
     },
     shopName: {
         type: String,

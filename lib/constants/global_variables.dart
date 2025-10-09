@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 // String uri = "https://ecommerce-server-xi-sandy.vercel.app";
-// String uri = "http://192.168.75.93:3000";
-String uri = "https://gas-app-backend-1gjx.onrender.com";
+String uri = "http://172.31.53.96:5000";
+// String uri = "https://gas-app-backend-1gjx.onrender.com";
 
 class GlobalVariables {
   // COLORS

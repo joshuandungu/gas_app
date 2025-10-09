@@ -1,5 +1,6 @@
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_button.dart';
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_textfield.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
@@ -37,7 +38,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
         password: _passwordController.text,
         name: _nameController.text,
         role: 'user',
-        onSuccess: (email) {
+        onSuccess: (email, userId) {
           Navigator.pushNamed(
             context,
             '/user-email-verification-screen',
@@ -87,6 +88,27 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                   hintText: 'Password',
                   isPass: true,
                   keyboardType: TextInputType.text,
+                  validator: (val) {
+                    if (val == null || val.isEmpty) {
+                      return 'Please enter a password';
+                    }
+                    if (val.length < 8) {
+                      return 'Password must be at least 8 characters';
+                    }
+                    if (!val.contains(RegExp(r'[A-Z]'))) {
+                      return 'Must contain an uppercase letter';
+                    }
+                    if (!val.contains(RegExp(r'[a-z]'))) {
+                      return 'Must contain a lowercase letter';
+                    }
+                    if (!val.contains(RegExp(r'[0-9]'))) {
+                      return 'Must contain a number';
+                    }
+                    if (!val.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+                      return 'Must contain a special character';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 15),
                 CustomTextField(
@@ -95,6 +117,9 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                   isPass: true,
                   keyboardType: TextInputType.text,
                   validator: (val) {
+                    if (val == null || val.isEmpty) {
+                      return 'Please confirm your password';
+                    }
                     if (val != _passwordController.text) {
                       return 'Passwords do not match!';
                     }
@@ -110,7 +135,8 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                     const Text("Already have an account? "),
                     InkWell(
                       onTap: () {
-                        Navigator.pop(context);
+                        Navigator.pushNamed(context, LoginScreen.routeName,
+                            arguments: 'user');
                       },
                       child: Text(
                         'Log In',

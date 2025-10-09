@@ -1,5 +1,5 @@
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_login_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_orders_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/best_sellers_screen.dart';
 import 'package:flutter/material.dart';
@@ -59,8 +59,11 @@ class _AdminScreenState extends State<AdminScreen> {
                 icon: const Icon(Icons.menu_rounded),
                 onSelected: (value) {
                   if (value == 'logout') {
-                    AccountServices().logOut(context,
-                        logoutRedirectRouteName: AdminLoginScreen.routeName);
+                    AccountServices().logOut(
+                      context,
+                      logoutRedirectRouteName: LoginScreen.routeName,
+                      role: 'admin',
+                    );
                   }
                 },
                 itemBuilder: (context) => [
@@ -160,6 +163,23 @@ class _AdminScreenState extends State<AdminScreen> {
               child: const Icon(Icons.analytics),
             ),
             label: 'Best Sellers',
+          ),
+          BottomNavigationBarItem(
+            icon: Container(
+              width: bottomBarWidth,
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: _page == 4
+                        ? GlobalVariables.selectedNavBarColor
+                        : GlobalVariables.backgroundColor,
+                    width: bottomBarBorderWidth,
+                  ),
+                ),
+              ),
+              child: const Icon(Icons.shopping_cart),
+            ),
+            label: 'Orders',
           ),
         ],
       ),

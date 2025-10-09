@@ -9,10 +9,13 @@ class UserProvider extends ChangeNotifier {
     password: '',
     address: '',
     type: '',
+    status: '',
     token: '',
     cart: [],
     followers: [],
     following: [],
+    latitude: 0.0,
+    longitude: 0.0,
   );
 
   User get user => _user;
@@ -32,7 +35,6 @@ class UserProvider extends ChangeNotifier {
     if (!_user.following.contains(sellerId)) {
       _user = _user.copyWith(
         following: [..._user.following, sellerId],
-        phoneNumber: null,
       );
       notifyListeners();
     }
@@ -42,20 +44,19 @@ class UserProvider extends ChangeNotifier {
   void unfollowSeller(String sellerId) {
     _user = _user.copyWith(
       following: _user.following.where((id) => id != sellerId).toList(),
-      phoneNumber: null,
     );
     notifyListeners();
   }
 
   // Method to update a list of followers folling a seller
   void updateFollowing(List<String> following) {
-    _user = _user.copyWith(following: following, phoneNumber: null);
+    _user = _user.copyWith(following: following);
     notifyListeners();
   }
 
   
   void updateFollowers(List<String> followers) {
-    _user = _user.copyWith(followers: followers, phoneNumber: null);
+    _user = _user.copyWith(followers: followers);
     notifyListeners();
   }
 

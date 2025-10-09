@@ -20,8 +20,12 @@ class AuthService {
     required String password,
     required String name,
     required String role,
-    Function(String)? onSuccess,
+    Function(String email, String userId)? onSuccess,
   }) async {
+    if (!(await hasInternetConnection())) {
+      showSnackBar(context, 'No internet connection');
+      return;
+    }
     try {
       http.Response res = await http.post(
         Uri.parse('$uri/api/signup'),
@@ -41,7 +45,8 @@ class AuthService {
         context: context,
         onSuccess: () {
           if (onSuccess != null) {
-            onSuccess(email);
+            final userId = jsonDecode(res.body)['_id'];
+            onSuccess(email, userId);
           } else {
             showSnackBar(context, 'Account has been successfully created!');
           }
@@ -59,6 +64,10 @@ class AuthService {
     required String password,
     required String role,
   }) async {
+    if (!(await hasInternetConnection())) {
+      showSnackBar(context, 'No internet connection');
+      return;
+    }
     try {
       http.Response res = await http.post(
         Uri.parse('$uri/api/signin'),
@@ -76,9 +85,14 @@ class AuthService {
         response: res,
         context: context,
         onSuccess: () async {
+          final userData = jsonDecode(res.body);
+          if (userData['status'] != 'active') {
+            showSnackBar(context, 'Your account is pending approval by admin.');
+            return;
+          }
           SharedPreferences prefs = await SharedPreferences.getInstance();
           Provider.of<UserProvider>(context, listen: false).setUser(res.body);
-          await prefs.setString('x-auth-token', jsonDecode(res.body)['token']);
+          await prefs.setString('x-auth-token', userData['token']);
           final userProvider =
               Provider.of<UserProvider>(context, listen: false);
           String routeName = BottomBar.routeName;
@@ -103,6 +117,10 @@ class AuthService {
   void getUserData(
     BuildContext context,
   ) async {
+    if (!(await hasInternetConnection())) {
+      showSnackBar(context, 'No internet connection');
+      return;
+    }
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('x-auth-token');
@@ -141,6 +159,10 @@ class AuthService {
     required BuildContext context,
     required String email,
   }) async {
+    if (!(await hasInternetConnection())) {
+      showSnackBar(context, 'No internet connection');
+      return null;
+    }
     try {
       http.Response res = await http.post(
         Uri.parse('$uri/api/reset-password'),
@@ -180,6 +202,10 @@ class AuthService {
     required String resetToken,
     required String newPassword,
   }) async {
+    if (!(await hasInternetConnection())) {
+      showSnackBar(context, 'No internet connection');
+      return false;
+    }
     bool success = false;
     try {
       http.Response res = await http.post(
@@ -217,6 +243,10 @@ class AuthService {
     required String code,
     Function()? onSuccess,
   }) async {
+    if (!(await hasInternetConnection())) {
+      showSnackBar(context, 'No internet connection');
+      return;
+    }
     try {
       http.Response res = await http.post(
         Uri.parse('$uri/api/verify-email'),
@@ -238,6 +268,38 @@ class AuthService {
           } else {
             showSnackBar(context, 'Email verified successfully!');
           }
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+  }
+
+  // resend verification code
+  void resendVerificationCode({
+    required BuildContext context,
+    required String email,
+  }) async {
+    if (!(await hasInternetConnection())) {
+      showSnackBar(context, 'No internet connection');
+      return;
+    }
+    try {
+      http.Response res = await http.post(
+        Uri.parse('$uri/api/resend-verification-code'),
+        body: jsonEncode({
+          'email': email,
+        }),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+      if (!context.mounted) return;
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          showSnackBar(context, 'A new verification code has been sent.');
         },
       );
     } catch (e) {

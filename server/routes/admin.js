@@ -132,6 +132,8 @@ adminRouter.post("/admin/process-seller-request", admin, async (req, res) => {
                 shopDescription: request.shopDescription,
                 address: request.address,
                 shopAvatar: request.avatarUrl,
+                latitude: request.latitude,
+                longitude: request.longitude,
             });
         }
 
@@ -179,6 +181,24 @@ adminRouter.post("/admin/suspend-seller", admin, async (req, res) => {
     }
 });
 
+// Activate seller account
+adminRouter.post("/admin/activate-seller", admin, async (req, res) => {
+    try {
+        const { sellerId } = req.body;
+        const seller = await User.findById(sellerId);
+
+        if (!seller || seller.type !== "seller") {
+            return res.status(404).json({ msg: "Seller not found" });
+        }
+
+        seller.status = "active";
+        await seller.save();
+        res.json({ msg: "Seller account activated successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Delete seller account
 adminRouter.delete("/admin/seller/:id", admin, async (req, res) => {
     try {
@@ -210,6 +230,24 @@ adminRouter.post("/admin/suspend-user", admin, async (req, res) => {
         user.status = "suspended";
         await user.save();
         res.json({ msg: "User account suspended successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Approve user account
+adminRouter.post("/admin/approve-user", admin, async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const user = await User.findById(userId);
+
+        if (!user || user.type !== "user") {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        user.status = "active";
+        await user.save();
+        res.json({ msg: "User account approved successfully" });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

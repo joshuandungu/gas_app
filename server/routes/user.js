@@ -72,7 +72,14 @@ userRouter.post("/api/save-user-address", auth, async (req, res) => {
 // get all your orders
 userRouter.get("/api/orders/me", auth, async (req, res) => {
     try {
-        const orders = await Order.find({ userId: req.user }).populate('products.product');
+        const orders = await Order.find({ userId: req.user })
+            .populate({
+                path: 'products.product',
+                populate: {
+                    path: 'sellerId',
+                    select: 'name email shopName'
+                }
+            });
         res.json(orders);
     } catch (e) {
         res.status(500).json({ error: e.message });
