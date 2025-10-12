@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_button.dart';
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_textfield.dart';
@@ -36,7 +37,7 @@ class _SellerRegisterScreenState extends State<SellerRegisterScreen> {
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
-  dynamic avatarImage;
+  Uint8List? avatarImage;
 
   @override
   void dispose() {
@@ -188,10 +189,7 @@ class _SellerRegisterScreenState extends State<SellerRegisterScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: avatarImage != null
-                          ? (kIsWeb
-                              ? Image.memory(avatarImage, fit: BoxFit.cover)
-                              : Image.file(avatarImage as File,
-                                  fit: BoxFit.cover))
+                          ? Image.memory(avatarImage!, fit: BoxFit.cover)
                           : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [

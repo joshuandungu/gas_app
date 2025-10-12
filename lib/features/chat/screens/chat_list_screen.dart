@@ -9,11 +9,13 @@ import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:provider/provider.dart';
 
-enum ChatListView { allSellers, conversations }
+enum ChatListView { allSellers, conversations, admin, allUsers }
 
 class ChatListScreen extends StatefulWidget {
   static const String routeName = '/chat-list';
-  const ChatListScreen({Key? key}) : super(key: key);
+  const ChatListScreen({Key? key, this.initialView}) : super(key: key);
+
+  final String? initialView;
 
   @override
   State<ChatListScreen> createState() => _ChatListScreenState();
@@ -24,12 +26,24 @@ class _ChatListScreenState extends State<ChatListScreen> {
   final HomeServices _homeServices = HomeServices();
   List<ChatRoom>? _chatRooms;
   List<User>? _allSellers;
+  List<User>? _allUsers;
   ChatListView _currentView = ChatListView.conversations;
 
   @override
   void initState() {
     super.initState();
     _chatService.connect(context);
+
+    // Set initial view based on widget parameter or arguments
+    if (widget.initialView == 'admin') {
+      _currentView = ChatListView.admin;
+    } else {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null && args['view'] == 'admin') {
+        _currentView = ChatListView.admin;
+      }
+    }
+
     _fetchData();
 
     // Listen for updates to refresh the chat list
@@ -44,6 +58,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
     _chatRooms = await _chatService.getMyChats(context);
     if (_currentView == ChatListView.allSellers) {
       _allSellers = await _homeServices.fetchTopSellers(context);
+    }
+    if (_currentView == ChatListView.allUsers) {
+      _allUsers = await _homeServices.fetchAllUsers(context);
     }
     if (mounted) {
       setState(() {});
@@ -91,6 +108,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
@@ -103,31 +121,68 @@ class _ChatListScreenState extends State<ChatListScreen> {
           title: Text(
               _currentView == ChatListView.allSellers
                   ? 'Start a Chat'
-                  : 'My Chats',
+                  : _currentView == ChatListView.admin
+                      ? 'Chat with Admin'
+                      : _currentView == ChatListView.allUsers
+                          ? 'Start a Chat'
+                          : 'My Chats',
               style: const TextStyle(color: Colors.black)),
           automaticallyImplyLeading: false,
           actions: [
-            Tooltip(
-              message: _currentView == ChatListView.allSellers
-                  ? 'View my conversations'
-                  : 'Start a new chat',
-              child: IconButton(
-                icon: Icon(
-                  _currentView == ChatListView.allSellers
-                      ? Icons.chat_bubble_outline
-                      : Icons.add_comment_outlined,
-                  color: Colors.black,
+            if (user.type == 'admin')
+              Tooltip(
+                message: _currentView == ChatListView.conversations
+                    ? 'View all users'
+                    : 'View my conversations',
+                child: IconButton(
+                  icon: Icon(
+                    _currentView == ChatListView.conversations
+                        ? Icons.people
+                        : Icons.chat_bubble_outline,
+                    color: Colors.black,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      if (_currentView == ChatListView.conversations) {
+                        _currentView = ChatListView.allUsers;
+                      } else {
+                        _currentView = ChatListView.conversations;
+                      }
+                      _fetchData();
+                    });
+                  },
                 ),
-                onPressed: () {
-                  setState(() {
-                    _currentView = _currentView == ChatListView.allSellers
-                        ? ChatListView.conversations
-                        : ChatListView.allSellers;
-                    _fetchData();
-                  });
-                },
-              ),
-            )
+              )
+            else
+              Tooltip(
+                message: _currentView == ChatListView.allSellers
+                    ? 'View my conversations'
+                    : _currentView == ChatListView.admin
+                        ? 'Start a new chat'
+                        : 'Start a new chat',
+                child: IconButton(
+                  icon: Icon(
+                    _currentView == ChatListView.allSellers
+                        ? Icons.chat_bubble_outline
+                        : _currentView == ChatListView.admin
+                            ? Icons.add_comment_outlined
+                            : Icons.add_comment_outlined,
+                    color: Colors.black,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      if (_currentView == ChatListView.conversations) {
+                        _currentView = user.type == 'admin'
+                            ? ChatListView.admin
+                            : ChatListView.allSellers;
+                      } else {
+                        _currentView = ChatListView.conversations;
+                      }
+                      _fetchData();
+                    });
+                  },
+                ),
+              )
           ],
         ),
       ),
@@ -135,7 +190,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
         onRefresh: _fetchData,
         child: _currentView == ChatListView.allSellers
             ? _buildAllSellersList()
-            : _buildConversationsList(),
+            : _currentView == ChatListView.admin
+                ? _buildAdminChat()
+                : _currentView == ChatListView.allUsers
+                    ? _buildAllUsersList()
+                    : _buildConversationsList(),
       ),
     );
   }
@@ -251,6 +310,66 @@ class _ChatListScreenState extends State<ChatListScreen> {
               style: const TextStyle(fontWeight: FontWeight.bold)),
           onTap: () => _navigateToNewChat(
               receiverId: seller.id, receiverName: seller.shopName),
+        );
+      },
+    );
+  }
+
+  Widget _buildAdminChat() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.admin_panel_settings, size: 80, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          const Text('Chat with Admin', style: TextStyle(fontSize: 18)),
+          const SizedBox(height: 8),
+          const Text('Send queries and complaints to the admin',
+              style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => _navigateToNewChat(
+                receiverId: 'admin', receiverName: 'Admin Support'),
+            child: const Text('Start Chat'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAllUsersList() {
+    if (_allUsers == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_allUsers!.isEmpty) {
+      return Center(
+          child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.people_outline, size: 80, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          const Text('No users found.', style: TextStyle(fontSize: 16)),
+        ],
+      ));
+    }
+    return ListView.builder(
+      itemCount: _allUsers!.length,
+      itemBuilder: (context, index) {
+        final user = _allUsers![index];
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundImage: user.shopAvatar.isNotEmpty
+                ? NetworkImage(user.shopAvatar)
+                : null,
+            child: user.shopAvatar.isEmpty
+                ? const Icon(Icons.person)
+                : null,
+          ),
+          title: Text(user.shopName.isNotEmpty ? user.shopName : user.name,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(user.type, style: TextStyle(color: Colors.grey)),
+          onTap: () => _navigateToNewChat(
+              receiverId: user.id, receiverName: user.shopName.isNotEmpty ? user.shopName : user.name),
         );
       },
     );

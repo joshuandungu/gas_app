@@ -158,4 +158,56 @@ class AccountServices {
   Future<void> deleteNotification(BuildContext context, String id) async {}
   Future<void> deleteAllNotifications(BuildContext context) async {}
   Future<void> clearOldNotifications(BuildContext context, int days) async {}
+
+  Future<Map<String, String>> fetchAboutApp(BuildContext context) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    Map<String, String> aboutData = {};
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/api/about-app'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      if (!context.mounted) return {};
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          aboutData = Map<String, String>.from(jsonDecode(res.body));
+        },
+      );
+    } catch (e) {
+      if (context.mounted) {
+        showSnackBar(context, e.toString());
+      }
+    }
+    return aboutData;
+  }
+
+  Future<void> updateAboutApp(BuildContext context, Map<String, String> aboutData) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    try {
+      http.Response res = await http.post(
+        Uri.parse('$uri/admin/update-about-app'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+        body: jsonEncode(aboutData),
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {},
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+      rethrow;
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/account/widgets/buyer_drawer.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/home/widgets/address_box.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/home/widgets/carousel_image.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/home/widgets/deal_of_day.dart';
@@ -24,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const BuyerDrawer(),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(

@@ -10,6 +10,7 @@ import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/orders_scre
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/products_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/shop_profile_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/services/seller_services.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/seller/widgets/seller_drawer.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -73,6 +74,7 @@ class _SellerScreenState extends State<SellerScreen> {
     return shopOwner == null
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
+            drawer: const SellerDrawer(),
             appBar: PreferredSize(
               preferredSize: const Size.fromHeight(60),
               child: AppBar(

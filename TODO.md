@@ -1,14 +1,11 @@
-# TODO: Add Phone Numbers for Buyers and Vendors
+# TODO: Allow Admin to Edit About App Information
 
-## Pending Tasks
-- [x] Add phoneNumber to Flutter User model
-- [x] Add phone field to buyer registration screen
-- [x] Add phone field to seller registration screen
-- [x] Update auth_service signUpUser to send phone
-- [x] Update server signup to accept and save phone
-- [x] Add sellerPhone to Product model
-- [x] Update product population in server to include seller phone
-- [x] Update order details to show seller phone per product
-- [x] Update admin orders screen to fetch sellers and show vendor phones
-- [x] Enable buyers and vendors to update their profile with phone number in place
-- [ ] Test the changes
+## Tasks
+- [x] Add fetchAboutApp method in AccountServices to retrieve about app data from backend.
+- [x] Add updateAboutApp method in AccountServices to update about app data.
+- [x] Refactor AboutAppScreen to be stateful and fetch data on init.
+- [x] Add conditional UI: editable text fields and save button for admins, read-only text for others.
+- [x] Create AboutApp model for storing app information in database.
+- [x] Add GET /api/about-app route for fetching about app data.
+- [x] Add POST /admin/update-about-app route for updating about app data (admin only).
+- [ ] Test the functionality: verify admin can edit and save, others see read-only view.

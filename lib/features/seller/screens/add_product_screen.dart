@@ -45,7 +45,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       .toList();
 
   late String category;
-  List<dynamic> images = [];
+  List<Uint8List> images = [];
 
   @override
   void initState() {
@@ -128,11 +128,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         items: images.map(
                           (i) {
                             return Builder(
-                              builder: (BuildContext context) => kIsWeb
-                                  ? Image.memory(i as Uint8List,
-                                      fit: BoxFit.cover, height: 200)
-                                  : Image.file(i as File,
-                                      fit: BoxFit.cover, height: 200),
+                              builder: (BuildContext context) => Image.memory(
+                                i,
+                                fit: BoxFit.cover,
+                                height: 200,
+                              ),
                             );
                           },
                         ).toList(),

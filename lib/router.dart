@@ -1,12 +1,19 @@
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/bottom_bar.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/about_app_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/account_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/customer_care_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/edit_profile_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/notifications_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/orders_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/seller_registration_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/settings_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/address_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/set_address.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_register_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/customer_queries_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/system_settings_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/add_product_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_detail_screen.dart'; // This path is correct
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_chat_list_screen.dart';
@@ -33,7 +40,17 @@ import 'package:flutter/material.dart';
 Route<dynamic> generateRoute(RouteSettings routeSettings) {
   switch (routeSettings.name) {
     case LoginScreen.routeName:
-      var role = routeSettings.arguments as String;
+      var role = routeSettings.arguments as String?;
+      if (role == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Role not provided'),
+            ),
+          ),
+        );
+      }
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => LoginScreen(role: role),
@@ -45,6 +62,16 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
       );
     case UserEmailVerificationScreen.routeName:
       var args = routeSettings.arguments;
+      if (args == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Email verification arguments not provided'),
+            ),
+          ),
+        );
+      }
       if (args is Map<String, dynamic>) {
         return MaterialPageRoute(
           settings: routeSettings,
@@ -52,14 +79,34 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         );
       } else {
         // Fallback for string arguments (backward compatibility)
-        var email = args as String;
+        var email = args as String?;
+        if (email == null) {
+          return MaterialPageRoute(
+            settings: routeSettings,
+            builder: (_) => const Scaffold(
+              body: Center(
+                child: Text('Error: Email not provided'),
+              ),
+            ),
+          );
+        }
         return MaterialPageRoute(
           settings: routeSettings,
           builder: (_) => UserEmailVerificationScreen(email: email),
         );
       }
     case AdminEmailVerificationScreen.routeName:
-      var email = routeSettings.arguments as String;
+      var email = routeSettings.arguments as String?;
+      if (email == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Admin email not provided'),
+            ),
+          ),
+        );
+      }
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => AdminEmailVerificationScreen(email: email),
@@ -84,7 +131,37 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         settings: routeSettings,
         builder: (_) => const EditProfileScreen(),
       );
+    case '/account':
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const AccountScreen(),
+      );
     case '/orders':
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const OrdersScreen(),
+      );
+    case AboutAppScreen.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const AboutAppScreen(),
+      );
+    case SettingsScreen.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const SettingsScreen(),
+      );
+    case NotificationsScreen.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const NotificationsScreen(),
+      );
+    case CustomerCareScreen.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const CustomerCareScreen(),
+      );
+    case '/seller-orders':
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => const OrdersScreen(),
@@ -120,7 +197,17 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         builder: (_) => const SellerChatListScreen(),
       );
     case ShopProfileScreen.routeName:
-      var sellerId = routeSettings.arguments as String;
+      var sellerId = routeSettings.arguments as String?;
+      if (sellerId == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Seller ID not provided'),
+            ),
+          ),
+        );
+      }
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => ShopProfileScreen(
@@ -133,7 +220,17 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         builder: (_) => const SellerRegistrationScreen(),
       );
     case CategoryDealsScreen.routeName:
-      var category = routeSettings.arguments as String;
+      var category = routeSettings.arguments as String?;
+      if (category == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Category not provided'),
+            ),
+          ),
+        );
+      }
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => CategoryDealsScreen(
@@ -141,7 +238,17 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         ),
       );
     case SearchScreen.routeName:
-      var search = routeSettings.arguments as String;
+      var search = routeSettings.arguments as String?;
+      if (search == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Search query not provided'),
+            ),
+          ),
+        );
+      }
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => SearchScreen(
@@ -149,7 +256,17 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         ),
       );
     case ProductDetailsScreen.routeName:
-      var product = routeSettings.arguments as Product;
+      var product = routeSettings.arguments as Product?;
+      if (product == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Product not provided'),
+            ),
+          ),
+        );
+      }
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => ProductDetailsScreen(
@@ -157,7 +274,17 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         ),
       );
     case AddressScreen.routeName:
-      var args = routeSettings.arguments as Map<String, dynamic>;
+      var args = routeSettings.arguments as Map<String, dynamic>?;
+      if (args == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Address screen arguments not provided'),
+            ),
+          ),
+        );
+      }
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => AddressScreen(
@@ -168,7 +295,17 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         ),
       );
     case OrderDetailsScreens.routeName:
-      var order = routeSettings.arguments as Order;
+      var order = routeSettings.arguments as Order?;
+      if (order == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Order not provided'),
+            ),
+          ),
+        );
+      }
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => OrderDetailsScreens(
@@ -176,7 +313,17 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         ),
       );
     case UpdateProductScreen.routeName:
-      var product = routeSettings.arguments as Product;
+      var product = routeSettings.arguments as Product?;
+      if (product == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Product not provided'),
+            ),
+          ),
+        );
+      }
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => UpdateProductScreen(
@@ -184,12 +331,32 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         ),
       );
     case SetDiscountScreen.routeName:
-      var product = routeSettings.arguments as Product;
+      var product = routeSettings.arguments as Product?;
+      if (product == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Product not provided'),
+            ),
+          ),
+        );
+      }
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => SetDiscountScreen(
           product: product,
         ),
+      );
+    case SystemSettingsScreen.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const SystemSettingsScreen(),
+      );
+    case CustomerQueriesScreen.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const CustomerQueriesScreen(),
       );
     case SetAddressScreen.routeName:
       return MaterialPageRoute(
@@ -197,12 +364,23 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
         builder: (_) => const SetAddressScreen(),
       );
     case ChatListScreen.routeName:
+      var args = routeSettings.arguments as Map<String, dynamic>?;
       return MaterialPageRoute(
         settings: routeSettings,
-        builder: (_) => const ChatListScreen(),
+        builder: (_) => ChatListScreen(initialView: args?['view']),
       );
     case ChatDetailScreen.routeName:
-      var args = routeSettings.arguments as Map<String, dynamic>;
+      var args = routeSettings.arguments as Map<String, dynamic>?;
+      if (args == null) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Error: Chat detail arguments not provided'),
+            ),
+          ),
+        );
+      }
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => ChatDetailScreen(

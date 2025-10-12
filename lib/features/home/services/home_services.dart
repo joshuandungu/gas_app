@@ -173,4 +173,31 @@ class HomeServices {
     }
     return topSellers;
   }
+
+  Future<List<User>> fetchAllUsers(BuildContext context) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<User> users = [];
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/api/users'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          for (var userData in jsonDecode(res.body)) {
+            users.add(User.fromMap(userData));
+          }
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return users;
+  }
 }

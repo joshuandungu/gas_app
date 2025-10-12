@@ -9,6 +9,7 @@ const SellerRequest = require("../models/sellerRequest");
 const bcryptjs = require('bcryptjs');
 const adminRouter = express.Router();
 const User = require("../models/user");
+const AboutApp = require("../models/aboutApp");
 
 // DEV ONLY: Create admin user
 adminRouter.post('/admin/create-admin', async (req, res) => {
@@ -373,6 +374,44 @@ adminRouter.post("/admin/change-order-status", admin, async (req, res) => {
         order.status = status;
         order = await order.save();
         res.json(order);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Get about app information
+adminRouter.get("/api/about-app", async (req, res) => {
+    try {
+        let aboutApp = await AboutApp.findOne();
+        if (!aboutApp) {
+            aboutApp = new AboutApp();
+            await aboutApp.save();
+        }
+        res.json({
+            appName: aboutApp.appName,
+            version: aboutApp.version,
+            description: aboutApp.description,
+            developer: aboutApp.developer,
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Update about app information (admin only)
+adminRouter.post("/admin/update-about-app", admin, async (req, res) => {
+    try {
+        const { appName, version, description, developer } = req.body;
+        let aboutApp = await AboutApp.findOne();
+        if (!aboutApp) {
+            aboutApp = new AboutApp();
+        }
+        aboutApp.appName = appName || aboutApp.appName;
+        aboutApp.version = version || aboutApp.version;
+        aboutApp.description = description || aboutApp.description;
+        aboutApp.developer = developer || aboutApp.developer;
+        await aboutApp.save();
+        res.json({ msg: 'About app information updated successfully' });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

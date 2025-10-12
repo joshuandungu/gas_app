@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -29,7 +30,7 @@ class _AddProductScreenState extends State<UpdateProductScreen> {
   final SellerServices sellerServices = SellerServices();
   bool _isLoading = false;
 
-  List<dynamic> newImages = [];
+  List<Uint8List> newImages = [];
   List<String> images = [];
   String category = 'Mobiles';
   final List<String> productCategories = GlobalVariables.categoryImages
@@ -127,17 +128,11 @@ class _AddProductScreenState extends State<UpdateProductScreen> {
         CarouselSlider(
           items: newImages.map((i) {
             return Builder(
-              builder: (BuildContext context) => kIsWeb
-                  ? Image.memory(
-                      i,
-                      fit: BoxFit.cover,
-                      height: 200,
-                    )
-                  : Image.file(
-                      i,
-                      fit: BoxFit.cover,
-                      height: 200,
-                    ),
+              builder: (BuildContext context) => Image.memory(
+                i,
+                fit: BoxFit.cover,
+                height: 200,
+              ),
             );
           }).toList(),
           options: CarouselOptions(

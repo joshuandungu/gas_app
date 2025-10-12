@@ -2,6 +2,7 @@ import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/splash_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/services/auth_service.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/product_provider.dart';
+import 'package:ecommerce_app_fluterr_nodejs/providers/theme_provider.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:ecommerce_app_fluterr_nodejs/router.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ void main() {
           create: (context) => UserProvider(),
         ),
         ChangeNotifierProvider(create: (context) => ProductProvider()),
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
       ],
       child: const MyApp(),
     ),
@@ -38,31 +40,13 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Revos Gas Platform',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: GlobalVariables.primaryColor,
-          primary: GlobalVariables.primaryColor,
-          secondary: GlobalVariables.secondaryColor,
-          background: GlobalVariables.backgroundColor,
-        ),
-        // AppBar theme
-        appBarTheme: const AppBarTheme(
-          elevation: 0,
-          iconTheme: IconThemeData(
-            color: Colors.black,
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: GlobalVariables.primaryColor,
-            foregroundColor: Colors.white,
-          ),
-        ),
-        useMaterial3: true,
-      ),
+      theme: themeProvider.lightTheme,
+      darkTheme: themeProvider.darkTheme,
+      themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       onGenerateRoute: (settings) => generateRoute(settings),
       home: const SplashScreen(),
     );

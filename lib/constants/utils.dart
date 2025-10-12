@@ -46,8 +46,8 @@ Future<Position?> getCurrentLocation() async {
   return await Geolocator.getCurrentPosition();
 }
 
-Future<List<dynamic>> pickImages() async {
-  List<dynamic> images = [];
+Future<List<Uint8List>> pickImages() async {
+  List<Uint8List> images = [];
   try {
     var files = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -56,11 +56,9 @@ Future<List<dynamic>> pickImages() async {
       allowCompression: true,
     );
     if (files != null && files.files.isNotEmpty) {
-      for (int i = 0; i < files.files.length; i++) {
-        if (kIsWeb) {
-          images.add(files.files[i].bytes!);
-        } else {
-          images.add(File(files.files[i].path!));
+      for (var file in files.files) {
+        if (file.bytes != null) {
+          images.add(file.bytes!);
         }
       }
     }
@@ -70,7 +68,7 @@ Future<List<dynamic>> pickImages() async {
   return images;
 }
 
-Future<dynamic> pickImage() async {
+Future<Uint8List?> pickImage() async {
   try {
     var result = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -78,12 +76,8 @@ Future<dynamic> pickImage() async {
       withData: true,
       allowCompression: true,
     );
-    if (result != null && result.files.isNotEmpty) {
-      if (kIsWeb) {
-        return result.files.first.bytes!;
-      } else {
-        return File(result.files.first.path!);
-      }
+    if (result != null && result.files.isNotEmpty && result.files.first.bytes != null) {
+      return result.files.first.bytes!;
     }
   } catch (e) {
     debugPrint(e.toString());
