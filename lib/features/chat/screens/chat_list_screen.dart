@@ -32,19 +32,26 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   void initState() {
     super.initState();
-    _chatService.connect(context);
-
     // Set initial view based on widget parameter or arguments
     if (widget.initialView == 'admin') {
       _currentView = ChatListView.admin;
     } else {
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      if (args != null && args['view'] == 'admin') {
-        _currentView = ChatListView.admin;
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+        if (args != null) {
+          if (args['view'] == 'admin') {
+            _currentView = ChatListView.admin;
+          } else if (args['view'] == 'seller') {
+            _currentView = ChatListView.allSellers;
+          } else if (args['view'] == 'allUsers') {
+            _currentView = ChatListView.allUsers;
+          }
+        }
+        _fetchData();
+      });
     }
 
-    _fetchData();
+    _chatService.connect(context);
 
     // Listen for updates to refresh the chat list
     _chatService.listenForChatListUpdates(() {
@@ -73,8 +80,27 @@ class _ChatListScreenState extends State<ChatListScreen> {
         context: context, receiverId: receiverId);
 
     if (chatRoom != null && mounted) {
-      final receiver =
-          chatRoom.participants.firstWhere((p) => p.id == receiverId);
+      User receiver;
+      if (receiverId == 'admin') {
+        // Create a dummy admin user since admin is not a real user in participants
+        receiver = User(
+          id: 'admin',
+          name: 'Admin Support',
+          email: 'admin@support.com',
+          password: '',
+          type: 'admin',
+          status: 'active',
+          shopName: 'Admin Support',
+          shopDescription: '',
+          shopAvatar: '',
+          phoneNumber: '',
+          address: '',
+          token: '',
+          cart: [],
+        );
+      } else {
+        receiver = chatRoom.participants.firstWhere((p) => p.id == receiverId);
+      }
       Navigator.pushNamed(
         context,
         ChatDetailScreen.routeName,

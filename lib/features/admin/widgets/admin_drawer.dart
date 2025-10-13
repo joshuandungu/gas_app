@@ -1,9 +1,11 @@
 import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/about_app_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/customer_queries_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/system_settings_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_list_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -20,7 +22,12 @@ class AdminDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text(user.name),
+            accountName: GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, AdminScreen.routeName);
+              },
+              child: Text(user.name),
+            ),
             accountEmail: Text(user.email),
             currentAccountPicture: CircleAvatar(
               backgroundImage: user.shopAvatar.isNotEmpty
@@ -35,8 +42,7 @@ class AdminDrawer extends StatelessWidget {
             leading: const Icon(Icons.person),
             title: const Text('Profile'),
             onTap: () {
-              // Navigate to profile screen
-              Navigator.pop(context); // Close drawer
+              Navigator.pushNamed(context, AdminScreen.routeName);
             },
           ),
           ListTile(
@@ -51,6 +57,14 @@ class AdminDrawer extends StatelessWidget {
             title: const Text('Customer Queries'),
             onTap: () {
               Navigator.pushNamed(context, CustomerQueriesScreen.routeName);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.chat),
+            title: const Text('Chat with Users'),
+            onTap: () {
+              Navigator.pushNamed(context, ChatListScreen.routeName,
+                  arguments: {'view': 'allUsers'});
             },
           ),
           ListTile(

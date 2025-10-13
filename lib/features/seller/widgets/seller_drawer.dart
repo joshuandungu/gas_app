@@ -6,6 +6,7 @@ import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_s
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/orders_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -22,7 +23,12 @@ class SellerDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text(user.name),
+            accountName: GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, SellerScreen.routeName);
+              },
+              child: Text(user.name),
+            ),
             accountEmail: Text(user.email),
             currentAccountPicture: CircleAvatar(
               backgroundImage: user.shopAvatar.isNotEmpty
@@ -37,8 +43,7 @@ class SellerDrawer extends StatelessWidget {
             leading: const Icon(Icons.person),
             title: const Text('Profile'),
             onTap: () {
-              // Navigate to profile screen
-              Navigator.pop(context); // Close drawer
+              Navigator.pushNamed(context, SellerScreen.routeName);
             },
           ),
           ListTile(

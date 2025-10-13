@@ -23,7 +23,12 @@ class BuyerDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text(user.name),
+            accountName: GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, '/account');
+              },
+              child: Text(user.name),
+            ),
             accountEmail: Text(user.email),
             currentAccountPicture: CircleAvatar(
               backgroundImage: user.shopAvatar.isNotEmpty
@@ -80,15 +85,14 @@ class BuyerDrawer extends StatelessWidget {
             leading: const Icon(Icons.chat),
             title: const Text('Chat with Sellers'),
             onTap: () {
-              Navigator.pushNamed(context, ChatListScreen.routeName);
+              Navigator.pushNamed(context, ChatListScreen.routeName, arguments: {'view': 'seller'});
             },
           ),
           ListTile(
             leading: const Icon(Icons.admin_panel_settings),
             title: const Text('Chat with Admin'),
             onTap: () {
-              Navigator.pushNamed(context, ChatListScreen.routeName,
-                  arguments: {'view': 'admin'});
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatListScreen(initialView: 'admin')));
             },
           ),
           const Divider(),
