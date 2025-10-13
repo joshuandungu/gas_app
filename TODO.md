@@ -1,11 +1,26 @@
-- [x] Make profile names clickable in buyer_drawer.dart by wrapping accountName in GestureDetector
-- [x] Update 'Profile' ListTile in seller_drawer.dart to navigate to SellerScreen
-- [x] Make profile names clickable in seller_drawer.dart by wrapping accountName in GestureDetector
-- [x] Update 'Profile' ListTile in admin_drawer.dart to navigate to AdminScreen
-- [x] Make profile names clickable in admin_drawer.dart by wrapping accountName in GestureDetector
-- [x] Add necessary imports for SellerScreen and AdminScreen in seller_drawer.dart and admin_drawer.dart
-- [x] Update Message model to include imageUrl field
-- [x] Modify chat_detail_screen.dart to add image picker button and display images
-- [x] Update chat_service.dart to handle image upload to Cloudinary
-- [x] Update server-side Message model to include imageUrl
-- [x] Update server socket handler to handle image messages
+# TODO: Fix Cloudinary Image Upload 400 Error
+
+## Problem
+- Product upload fails with DioException [bad response]: status code 400
+- Error occurs during image upload to Cloudinary
+- "Client error - the request contains bad syntax or cannot be fulfilled"
+
+## Root Cause Analysis
+- Potential issues: invalid folder name with special characters, incorrect Cloudinary credentials, upload preset configuration
+
+## Changes Made
+- [x] Added dio import to access DioException for better error handling
+- [x] Sanitized folder name by replacing special characters with underscores
+- [x] Added detailed error logging including response status and data
+
+## Next Steps
+- [ ] Test the upload again to see if sanitization fixes the issue
+- [ ] If still failing, verify Cloudinary cloud name and upload preset
+- [ ] Check if upload preset is configured for unsigned uploads
+- [ ] Ensure image format and size are supported by Cloudinary
+- [ ] Consider switching to signed uploads if unsigned preset is not configured properly
+
+## Testing
+- Run the app and attempt to add a product with images
+- Check debug logs for detailed error information
+- If 400 persists, investigate Cloudinary dashboard settings

@@ -103,6 +103,39 @@ class HomeServices {
     return _fetchProducts(context: context, url: '$uri/api/deal-of-day');
   }
 
+  Future<List<Product>> fetchAllProducts({
+    required BuildContext context,
+    String? category,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<Product> productList = [];
+    try {
+      String url = '$uri/api/products';
+      if (category != null) {
+        url += '?category=$category';
+      }
+
+      http.Response res = await http.get(Uri.parse(url), headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'x-auth-token': userProvider.user.token,
+      });
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          var jsonData = jsonDecode(res.body) as List;
+          for (var item in jsonData) {
+            productList.add(Product.fromMap(item));
+          }
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return productList;
+  }
+
   Future<List<User>> fetchTopSellers(BuildContext context) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     List<User> sellers = [];

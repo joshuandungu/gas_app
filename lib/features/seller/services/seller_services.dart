@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cloudinary_public/cloudinary_public.dart';
+import 'package:dio/dio.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/error_handling.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
@@ -130,12 +131,14 @@ class SellerServices {
         CloudinaryResponse res;
         try {
           debugPrint('Uploading image $i to Cloudinary...');
+          // Sanitize folder name to avoid issues with special characters
+          String sanitizedFolder = name.replaceAll(RegExp(r'[^\w\s-]'), '').replaceAll(' ', '_');
           res = await cloudinary.uploadFile(
             CloudinaryFile.fromBytesData(
               images[i], // Uint8List data
               identifier:
                   'product_image_${DateTime.now().millisecondsSinceEpoch}_$i',
-              folder: name,
+              folder: sanitizedFolder,
               resourceType: CloudinaryResourceType.Image,
             ),
           );
@@ -143,6 +146,11 @@ class SellerServices {
           imageUrls.add(res.secureUrl);
         } catch (e) {
           debugPrint('Failed to upload image $i: $e');
+          // Add more detailed error logging
+          if (e is DioException && e.response != null) {
+            debugPrint('Response status: ${e.response?.statusCode}');
+            debugPrint('Response data: ${e.response?.data}');
+          }
           showSnackBar(context, 'Failed to upload image $i: $e');
           return false;
         }
@@ -587,5 +595,33 @@ class SellerServices {
       showSnackBar(context, e.toString());
     }
     return sellerList;
+  }
+
+  // get all the products for buyers
+  Future<List<Product>> fetchAllProductsForBuyers(BuildContext context) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<Product> productList = [];
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/api/products'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          final List<dynamic> productData = jsonDecode(res.body);
+          for (final item in productData) {
+            productList.add(Product.fromMap(item as Map<String, dynamic>));
+          }
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return productList;
   }
 }
