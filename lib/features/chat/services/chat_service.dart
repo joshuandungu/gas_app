@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:cloudinary_public/cloudinary_public.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/error_handling.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
@@ -41,6 +43,7 @@ class ChatService {
     required String senderId,
     required String receiverId,
     String? tempId,
+    String? imageUrl,
   }) {
     _socket?.emit('sendMessage', {
       'chatRoomId': chatRoomId,
@@ -48,6 +51,7 @@ class ChatService {
       'senderId': senderId,
       'receiverId': receiverId,
       'tempId': tempId,
+      'imageUrl': imageUrl,
     });
   }
 
@@ -221,6 +225,24 @@ class ChatService {
       showSnackBar(context, e.toString());
     }
     return messages;
+  }
+
+  Future<String?> uploadImage(Uint8List imageBytes, String folder) async {
+    try {
+      final cloudinary = CloudinaryPublic('dvgeq2l6e', 'xuvwiao4');
+      CloudinaryResponse res = await cloudinary.uploadFile(
+        CloudinaryFile.fromBytesData(
+          imageBytes,
+          identifier: 'chat_image_${DateTime.now().millisecondsSinceEpoch}',
+          folder: folder,
+          resourceType: CloudinaryResourceType.Image,
+        ),
+      );
+      return res.secureUrl;
+    } catch (e) {
+      debugPrint('Error uploading image: $e');
+      return null;
+    }
   }
 
   void dispose() {

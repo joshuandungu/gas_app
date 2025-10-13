@@ -120,6 +120,8 @@ class SellerServices {
     bool isSuccess = false;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
+      debugPrint('Starting product upload process...');
+      debugPrint('Images to upload: ${images.length}');
       // ko luu anh tren mongodb vi dung luong kha it(shared clutter),luu anh tren cloudinary
       final cloudinary = CloudinaryPublic('dvgeq2l6e', 'xuvwiao4');
       List<String> imageUrls = [];
@@ -127,6 +129,7 @@ class SellerServices {
       for (int i = 0; i < images.length; i++) {
         CloudinaryResponse res;
         try {
+          debugPrint('Uploading image $i to Cloudinary...');
           res = await cloudinary.uploadFile(
             CloudinaryFile.fromBytesData(
               images[i], // Uint8List data
@@ -136,12 +139,15 @@ class SellerServices {
               resourceType: CloudinaryResourceType.Image,
             ),
           );
+          debugPrint('Image $i uploaded successfully: ${res.secureUrl}');
           imageUrls.add(res.secureUrl);
         } catch (e) {
+          debugPrint('Failed to upload image $i: $e');
           showSnackBar(context, 'Failed to upload image $i: $e');
           return false;
         }
       }
+      debugPrint('All images uploaded. Creating product...');
       Product product = Product(
         name: name,
         description: description,
@@ -151,6 +157,7 @@ class SellerServices {
         price: price,
         sellerId: sellerId,
       );
+      debugPrint('Sending product to server...');
       http.Response res = await http.post(
         Uri.parse('$uri/seller/add-product'),
         headers: {
@@ -159,14 +166,18 @@ class SellerServices {
         },
         body: product.toJson(),
       );
+      debugPrint('Server response status: ${res.statusCode}');
+      debugPrint('Server response body: ${res.body}');
       httpErrorHandle(
         response: res,
         context: context,
         onSuccess: () {
           isSuccess = true;
+          debugPrint('Product added successfully');
         },
       );
     } catch (e) {
+      debugPrint('Error in sellProduct: $e');
       showSnackBar(context, e.toString());
     }
     return isSuccess;

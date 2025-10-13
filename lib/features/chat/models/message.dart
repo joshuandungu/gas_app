@@ -6,6 +6,7 @@ class Message {
   final String chatRoomId;
   final String senderId;
   final String text;
+  final String? imageUrl;
   final DateTime createdAt;
 
   Message({
@@ -15,6 +16,7 @@ class Message {
     required this.text,
     required this.createdAt,
     this.tempId,
+    this.imageUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class Message {
       'chatRoomId': chatRoomId,
       'senderId': senderId,
       'text': text,
+      'imageUrl': imageUrl,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -33,6 +36,7 @@ class Message {
       chatRoomId: map['chatRoomId'] ?? '',
       senderId: map['senderId'] ?? '',
       text: map['text'] ?? '',
+      imageUrl: map['imageUrl'],
       createdAt:
           DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
       tempId: map['tempId'], // Add this line to parse tempId

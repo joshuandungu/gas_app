@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/chat/services/chat_service.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/chat/models/message.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
@@ -163,6 +164,63 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
+  void _showImageDialog(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Image.network(imageUrl),
+      ),
+    );
+  }
+
+  void _pickAndSendImage() async {
+    final pickedImage = await pickImage();
+    if (pickedImage != null) {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+
+      // Generate a unique temporary ID for optimistic update
+      final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Add the message to the UI instantly
+      final tempMessage = Message(
+        id: tempId,
+        chatRoomId: widget.chatRoomId,
+        senderId: user.id,
+        text: '',
+        createdAt: DateTime.now(),
+        imageUrl: '', // Will be updated after upload
+      );
+
+      setState(() {
+        _messages.add(tempMessage);
+      });
+
+      // Upload image to Cloudinary
+      final imageUrl = await _chatService.uploadImage(
+        pickedImage,
+        'chat_images',
+      );
+
+      if (imageUrl != null) {
+        // Send the message with image URL
+        _chatService.sendMessage(
+          chatRoomId: widget.chatRoomId,
+          text: '',
+          senderId: user.id,
+          receiverId: widget.receiver.id,
+          tempId: tempId,
+          imageUrl: imageUrl,
+        );
+      } else {
+        // Remove the temporary message if upload failed
+        setState(() {
+          _messages.removeWhere((msg) => msg.id == tempId);
+        });
+        showSnackBar(context, 'Failed to upload image');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<UserProvider>(context).user;
@@ -230,7 +288,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                               color: isMe ? Colors.blue[200] : Colors.grey[300],
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: Text(message.text),
+                            child: message.imageUrl != null
+                                ? GestureDetector(
+                                    onTap: () => _showImageDialog(message.imageUrl!),
+                                    child: Image.network(
+                                      message.imageUrl!,
+                                      width: 200,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Text(message.text),
                           ),
                         ),
                       );
@@ -247,6 +315,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     decoration:
                         const InputDecoration(hintText: 'Type a message...'),
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.image),
+                  onPressed: _pickAndSendImage,
                 ),
                 IconButton(
                   icon: const Icon(Icons.send),

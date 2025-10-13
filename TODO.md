@@ -4,3 +4,8 @@
 - [x] Update 'Profile' ListTile in admin_drawer.dart to navigate to AdminScreen
 - [x] Make profile names clickable in admin_drawer.dart by wrapping accountName in GestureDetector
 - [x] Add necessary imports for SellerScreen and AdminScreen in seller_drawer.dart and admin_drawer.dart
+- [x] Update Message model to include imageUrl field
+- [x] Modify chat_detail_screen.dart to add image picker button and display images
+- [x] Update chat_service.dart to handle image upload to Cloudinary
+- [x] Update server-side Message model to include imageUrl
+- [x] Update server socket handler to handle image messages
