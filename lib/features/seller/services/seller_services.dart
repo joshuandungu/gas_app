@@ -60,6 +60,7 @@ class SellerServices {
           'avatarUrl': avatarRes.secureUrl,
           'latitude': latitude,
           'longitude': longitude,
+          'phone': phone,
         }),
       );
 
@@ -81,6 +82,70 @@ class SellerServices {
       showSnackBar(context, e.toString());
     }
     return status;
+  }
+
+  Future<void> requestSellerStatus({
+    required BuildContext context,
+    required String shopName,
+    required String shopDescription,
+    required String address,
+    required Uint8List avatar,
+    required String userId,
+    required double latitude,
+    required double longitude,
+    required String phone,
+  }) async {
+    try {
+      // Upload avatar to cloudinary
+      final cloudinary = CloudinaryPublic('dvgeq2l6e', 'xuvwiao4');
+      CloudinaryResponse avatarRes;
+
+      avatarRes = await cloudinary.uploadFile(
+        CloudinaryFile.fromBytesData(
+          avatar, // Uint8List data
+          identifier: 'shop_avatar_${DateTime.now().millisecondsSinceEpoch}',
+          folder: shopName,
+          resourceType: CloudinaryResourceType.Image,
+        ),
+      );
+
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+      http.Response res = await http.post(
+        Uri.parse('$uri/api/register-seller-auth'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+        body: jsonEncode({
+          'shopName': shopName,
+          'shopDescription': shopDescription,
+          'address': address,
+          'avatarUrl': avatarRes.secureUrl,
+          'latitude': latitude,
+          'longitude': longitude,
+          'phone': phone,
+        }),
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          showSnackBar(
+            context,
+            'Seller request submitted successfully! You are now a seller.',
+          );
+          // Update user type in provider
+          userProvider.setUserFromModel(
+            userProvider.user.copyWith(type: 'seller'),
+          );
+          Navigator.pop(context);
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
   }
 
   Future<String> checkRequestStatus(BuildContext context) async {

@@ -53,6 +53,46 @@ sellerRouter.post('/api/register-seller', async (req, res) => {
     }
 });
 
+// Register as seller for existing users (authenticated)
+sellerRouter.post('/api/register-seller-auth', auth, async (req, res) => {
+    try {
+        const { shopName, shopDescription, address, avatarUrl, latitude, longitude, phone } = req.body;
+
+        if (!shopName || !shopDescription || !address || !avatarUrl) {
+            return res.status(400).json({ msg: "All fields are required" });
+        }
+
+        // Check if user is already a seller
+        const user = await User.findById(req.user);
+        if (user.type === 'seller') {
+            return res.status(400).json({ msg: "You are already a seller" });
+        }
+
+        // Check if shop name already exists
+        const existingShop = await User.findOne({ shopName });
+        if (existingShop) {
+            return res.status(400).json({ msg: "Shop name already exists" });
+        }
+
+        // Directly update user to seller
+        await User.findByIdAndUpdate(req.user, {
+            type: "seller",
+            shopName,
+            shopDescription,
+            address,
+            shopAvatar: avatarUrl,
+            latitude,
+            longitude,
+            phoneNumber: phone,
+            status: "active",
+        });
+
+        res.json({ status: 'active', msg: "Seller registration successful" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Get seller request status
 sellerRouter.get('/api/seller-request-status', auth, async (req, res) => {
     try {

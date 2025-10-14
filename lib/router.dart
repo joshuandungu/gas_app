@@ -22,6 +22,7 @@ import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_screen
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/set_discount_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/shop_profile_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_register_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_request_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/update_product_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/user_register_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/user_email_verification_screen.dart';
@@ -191,6 +192,11 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => const SellerRegisterScreen(),
+      );
+    case '/seller-request-screen':
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const SellerRequestScreen(),
       );
     case SellerScreen.routeName:
       return MaterialPageRoute(

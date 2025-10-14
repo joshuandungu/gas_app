@@ -1,7 +1,13 @@
-- [x] Modify signup route in server/routes/auth.js: set isEmailVerified: true, status: "active", remove email sending
-- [x] Modify signin route in server/routes/auth.js: remove isEmailVerified check
-- [x] Modify seller registration in server/routes/seller.js: directly set user type to "seller", status "active", set shop fields, remove request creation
-- [x] Update user model in server/models/user.js: change default status to "active", isEmailVerified to true
-- [x] Remove or comment out verify-email and resend-verification-code routes in server/routes/auth.js
-- [x] Comment out seller request approval logic in server/routes/admin.js
-- [ ] Test the changes locally
+# TODO: Add Phone Number Field to Customer Request to Become Seller
+
+## Steps to Complete
+
+- [x] Add "Become a Seller" option in Buyer Drawer (`lib/features/account/widgets/buyer_drawer.dart`)
+- [x] Create Seller Request Screen (`lib/features/seller/screens/seller_request_screen.dart`)
+- [x] Update Seller Services (`lib/features/seller/services/seller_services.dart`)
+- [x] Update Backend Route (`server/routes/seller.js`)
+- [x] Update Router (`lib/router.dart`)
+
+## Followup Steps
+- [ ] Test the feature by logging in as a buyer and submitting a seller request
+- [ ] Verify phone number is properly captured and stored

@@ -82,6 +82,13 @@ class BuyerDrawer extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.store),
+            title: const Text('Become a Seller'),
+            onTap: () {
+              Navigator.pushNamed(context, '/seller-request-screen');
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.chat),
             title: const Text('Chat with Sellers'),
             onTap: () {
