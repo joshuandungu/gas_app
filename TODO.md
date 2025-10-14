@@ -1,14 +1,7 @@
-# TODO: Modify All Products Screen for Local Search and Filter
-
-## Steps to Complete
-
-- [x] Add TextEditingController for search bar input.
-- [x] Add state variables: List<Product> _allProducts, List<Product> _filteredProducts, String _searchQuery.
-- [x] Modify initState to fetch all products initially and set _allProducts and _filteredProducts.
-- [x] Implement _filterProducts() method to filter _allProducts based on _searchQuery and selectedCategory.
-- [x] Update search bar to use onChanged instead of onFieldSubmitted, update _searchQuery and call _filterProducts (remove navigation to SearchScreen).
-- [x] Modify category selection to update selectedCategory and call _filterProducts locally (no refetch).
-- [x] Update GridView to use _filteredProducts instead of products.
-- [x] Test the implementation by running the app and verifying search and category filtering work correctly.
-- [x] Add navigation from "See All" button in DealOfDay widget to AllProductsScreen.
-- [x] Add AllProductsScreen route to router.dart.
+- [x] Modify signup route in server/routes/auth.js: set isEmailVerified: true, status: "active", remove email sending
+- [x] Modify signin route in server/routes/auth.js: remove isEmailVerified check
+- [x] Modify seller registration in server/routes/seller.js: directly set user type to "seller", status "active", set shop fields, remove request creation
+- [x] Update user model in server/models/user.js: change default status to "active", isEmailVerified to true
+- [x] Remove or comment out verify-email and resend-verification-code routes in server/routes/auth.js
+- [x] Comment out seller request approval logic in server/routes/admin.js
+- [ ] Test the changes locally

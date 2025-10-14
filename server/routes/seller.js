@@ -34,30 +34,20 @@ sellerRouter.post('/api/register-seller', async (req, res) => {
             return res.status(400).json({ msg: "Shop name already exists" });
         }
 
-        // Check if user already has a pending request
-        const existingRequest = await SellerRequest.findOne({
-            userId: userId,
-            status: 'pending'
-        });
-
-        if (existingRequest) {
-            return res.status(400).json({ msg: "You already have a pending request" });
-        }
-
-        // Create new seller request
-        const sellerRequest = new SellerRequest({
-            userId: userId,
+        // Directly update user to seller
+        await User.findByIdAndUpdate(userId, {
+            type: "seller",
             shopName,
             shopDescription,
             address,
-            avatarUrl,
+            shopAvatar: avatarUrl,
             latitude,
             longitude,
             phoneNumber: phone,
+            status: "active",
         });
 
-        await sellerRequest.save();
-        res.json({ status: 'pending', msg: "Seller request submitted successfully" });
+        res.json({ status: 'active', msg: "Seller registration successful" });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

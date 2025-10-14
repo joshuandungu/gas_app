@@ -172,7 +172,16 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
                   ),
                   itemBuilder: (context, index) {
                     final product = _filteredProducts[index];
-                    return ProductCard(product: product);
+                    return ProductCard(
+                      product: product,
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/product-details',
+                          arguments: product,
+                        );
+                      },
+                    );
                   },
                 ),
     );

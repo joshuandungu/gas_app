@@ -29,20 +29,15 @@ authRouter.post("/api/signup", async (req, res) => {
             password: hashedPassword,
             name,
             type: role || 'user',
-            isEmailVerified: false,
-            emailVerificationCode: verificationCode,
+            isEmailVerified: true,
+            status: "active",
             latitude: latitude,
             longitude: longitude,
             phoneNumber: phoneNumber,
         });
         user = await user.save();
 
-        // Send verification code email
-        const subject = "Your Email Verification Code";
-        const text = `Your verification code is: ${verificationCode}`;
-        await sendEmail(email, subject, text);
-
-        res.json({ _id: user._id, msg: "User registered successfully. Verification code sent to email." });
+        res.json({ _id: user._id, msg: "User registered successfully." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -57,9 +52,7 @@ authRouter.post("/api/signin", async (req, res) => {
         if (!user) {
             return res.status(400).json({ msg: "User with this email does not exist!" });
         }
-        if (!user.isEmailVerified) {
-            return res.status(400).json({ msg: "Email not verified. Please verify your email before signing in." });
-        }
+
         if (role && user.type !== role) {
             return res.status(400).json({ msg: `This account is not registered as a ${role}.` });
         }
@@ -142,56 +135,58 @@ authRouter.post("/api/update-password", async (req, res) => {
     }
 });
 
-authRouter.post("/api/verify-email", async (req, res) => {
-    try {
-        const { email, code } = req.body;
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ msg: "User with this email does not exist!" });
-        }
-        if (user.isEmailVerified) {
-            return res.status(400).json({ msg: "Email is already verified." });
-        }
-        if (user.emailVerificationCode !== code) {
-            return res.status(400).json({ msg: "Invalid verification code." });
-        }
-        user.isEmailVerified = true;
-        user.emailVerificationCode = null;
-        await user.save();
-        res.json({ msg: "Email verified successfully." });
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
+// Email verification no longer needed - accounts are auto-approved
+// authRouter.post("/api/verify-email", async (req, res) => {
+//     try {
+//         const { email, code } = req.body;
+//         const user = await User.findOne({ email });
+//         if (!user) {
+//             return res.status(400).json({ msg: "User with this email does not exist!" });
+//         }
+//         if (user.isEmailVerified) {
+//             return res.status(400).json({ msg: "Email is already verified." });
+//         }
+//         if (user.emailVerificationCode !== code) {
+//             return res.status(400).json({ msg: "Invalid verification code." });
+//         }
+//         user.isEmailVerified = true;
+//         user.emailVerificationCode = null;
+//         await user.save();
+//         res.json({ msg: "Email verified successfully." });
+//     } catch (e) {
+//         res.status(500).json({ error: e.message });
+//     }
+// });
 
-authRouter.post("/api/resend-verification-code", async (req, res) => {
-    try {
-        const { email } = req.body;
-        const user = await User.findOne({ email });
+// Email verification no longer needed - accounts are auto-approved
+// authRouter.post("/api/resend-verification-code", async (req, res) => {
+//     try {
+//         const { email } = req.body;
+//         const user = await User.findOne({ email });
 
-        if (!user) {
-            return res.status(400).json({ msg: "This email is not registered!" });
-        }
+//         if (!user) {
+//             return res.status(400).json({ msg: "This email is not registered!" });
+//         }
 
-        if (user.isEmailVerified) {
-            return res.status(400).json({ msg: "This email is already verified." });
-        }
+//         if (user.isEmailVerified) {
+//             return res.status(400).json({ msg: "This email is already verified." });
+//         }
 
-        // Generate a new 6-digit verification code
-        const verificationCode = crypto.randomInt(100000, 999999).toString();
-        user.emailVerificationCode = verificationCode;
-        await user.save();
+//         // Generate a new 6-digit verification code
+//         const verificationCode = crypto.randomInt(100000, 999999).toString();
+//         user.emailVerificationCode = verificationCode;
+//         await user.save();
 
-        // Send verification code email
-        const subject = "Your New Email Verification Code";
-        const text = `Your new verification code is: ${verificationCode}`;
-        await sendEmail(email, subject, text);
+//         // Send verification code email
+//         const subject = "Your New Email Verification Code";
+//         const text = `Your new verification code is: ${verificationCode}`;
+//         await sendEmail(email, subject, text);
 
-        res.json({ msg: "Verification code has been resent successfully!" });
+//         res.json({ msg: "Verification code has been resent successfully!" });
 
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
+//     } catch (e) {
+//         res.status(500).json({ error: e.message });
+//     }
+// });
 
 module.exports = authRouter;
