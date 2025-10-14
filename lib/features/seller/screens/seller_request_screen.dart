@@ -127,6 +127,11 @@ class _SellerRequestScreenState extends State<SellerRequestScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
+                const Text(
+                  'Phone Number',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
                 CustomTextField(
                   textController: _phoneController,
                   hintText: 'Phone Number',

@@ -38,9 +38,12 @@ class SellerServices {
       final cloudinary = CloudinaryPublic('dvgeq2l6e', 'xuvwiao4');
       CloudinaryResponse avatarRes;
 
+      // Create a mutable copy of the avatar bytes
+      Uint8List avatarBytes = Uint8List.fromList(avatar);
+
       avatarRes = await cloudinary.uploadFile(
         CloudinaryFile.fromBytesData(
-          avatar, // Uint8List data
+          avatarBytes, // Uint8List data
           identifier: 'shop_avatar_${DateTime.now().millisecondsSinceEpoch}',
           folder: shopName,
           resourceType: CloudinaryResourceType.Image,
@@ -100,9 +103,12 @@ class SellerServices {
       final cloudinary = CloudinaryPublic('dvgeq2l6e', 'xuvwiao4');
       CloudinaryResponse avatarRes;
 
+      // Create a mutable copy of the avatar bytes
+      Uint8List avatarBytes = Uint8List.fromList(avatar);
+
       avatarRes = await cloudinary.uploadFile(
         CloudinaryFile.fromBytesData(
-          avatar, // Uint8List data
+          avatarBytes, // Uint8List data
           identifier: 'shop_avatar_${DateTime.now().millisecondsSinceEpoch}',
           folder: shopName,
           resourceType: CloudinaryResourceType.Image,
