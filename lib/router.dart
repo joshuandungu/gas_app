@@ -26,6 +26,7 @@ import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/update_prod
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/user_register_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/user_email_verification_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_email_verification_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/home/screens/all_products_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/home/screens/category_deals_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/home/screens/home_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/order_details/screens/order_details_screens.dart';
@@ -120,6 +121,11 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => const HomeScreen(),
+      );
+    case AllProductsScreen.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const AllProductsScreen(),
       );
     case BottomBar.routeName:
       return MaterialPageRoute(

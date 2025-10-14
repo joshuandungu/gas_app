@@ -2,7 +2,6 @@ import 'package:ecommerce_app_fluterr_nodejs/common/widgets/loader.dart';
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/product_card.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/home/services/home_services.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/search/screens/search_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/product.dart';
 import 'package:flutter/material.dart';
 
@@ -15,30 +14,59 @@ class AllProductsScreen extends StatefulWidget {
 }
 
 class _AllProductsScreenState extends State<AllProductsScreen> {
-  List<Product>? products;
+  List<Product> _allProducts = [];
+  List<Product> _filteredProducts = [];
   final HomeServices homeServices = HomeServices();
   String? selectedCategory;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchProducts();
+    fetchAllProducts();
   }
 
-  void fetchProducts({String? category}) async {
+  void fetchAllProducts() async {
     setState(() {
-      products = null; // Show loader while fetching
+      _isLoading = true;
+      _allProducts = [];
+      _filteredProducts = [];
+    });
+    _allProducts = await homeServices.fetchAllProducts(
+      context: context,
+      category: null, // Fetch all products without category filter
+    );
+    print('Fetched ${_allProducts.length} products'); // Debug log
+    _filterProducts();
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void _filterProducts() {
+    setState(() {
+      _filteredProducts = _allProducts.where((product) {
+        final matchesSearch = product.name.toLowerCase().contains(_searchQuery.toLowerCase());
+        final matchesCategory = selectedCategory == null || product.category == selectedCategory;
+        return matchesSearch && matchesCategory;
+      }).toList();
+    });
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _searchQuery = query;
+    });
+    _filterProducts();
+  }
+
+  void _onCategorySelected(String? category) {
+    setState(() {
       selectedCategory = category;
     });
-    products = await homeServices.fetchAllProducts(
-      context: context,
-      category: category,
-    );
-    setState(() {});
-  }
-
-  void navigateToSearchScreen(String query) {
-    Navigator.pushNamed(context, SearchScreen.routeName, arguments: query);
+    _filterProducts();
   }
 
   @override
@@ -63,8 +91,9 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
                     borderRadius: BorderRadius.circular(7),
                     elevation: 1,
                     child: TextFormField(
+                      controller: _searchController,
                       keyboardType: TextInputType.text,
-                      onFieldSubmitted: navigateToSearchScreen,
+                      onChanged: _onSearchChanged,
                       decoration: InputDecoration(
                         prefixIcon: InkWell(
                           onTap: () {},
@@ -126,15 +155,15 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
           ),
         ),
       ),
-      body: products == null
+      body: _isLoading
           ? const Loader()
-          : products!.isEmpty
+          : _filteredProducts.isEmpty
               ? const Center(
                   child: Text('No Products Found!'),
                 )
               : GridView.builder(
                   padding: const EdgeInsets.all(8.0),
-                  itemCount: products!.length,
+                  itemCount: _filteredProducts.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 0.75,
@@ -142,7 +171,7 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
                     mainAxisSpacing: 10,
                   ),
                   itemBuilder: (context, index) {
-                    final product = products![index];
+                    final product = _filteredProducts[index];
                     return ProductCard(product: product);
                   },
                 ),
@@ -158,7 +187,7 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
         selected: isSelected,
         onSelected: (selected) {
           if (selected) {
-            fetchProducts(category: categoryKey);
+            _onCategorySelected(categoryKey);
           }
         },
         selectedColor: Color.fromRGBO(

@@ -411,7 +411,9 @@ class _DealOfDayState extends State<DealOfDay> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/all-products');
+                      },
                       child: const Text('See All'),
                     ),
                   ],

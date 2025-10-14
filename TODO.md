@@ -1,26 +1,14 @@
-# TODO: Fix Cloudinary Image Upload 400 Error
+# TODO: Modify All Products Screen for Local Search and Filter
 
-## Problem
-- Product upload fails with DioException [bad response]: status code 400
-- Error occurs during image upload to Cloudinary
-- "Client error - the request contains bad syntax or cannot be fulfilled"
+## Steps to Complete
 
-## Root Cause Analysis
-- Potential issues: invalid folder name with special characters, incorrect Cloudinary credentials, upload preset configuration
-
-## Changes Made
-- [x] Added dio import to access DioException for better error handling
-- [x] Sanitized folder name by replacing special characters with underscores
-- [x] Added detailed error logging including response status and data
-
-## Next Steps
-- [ ] Test the upload again to see if sanitization fixes the issue
-- [ ] If still failing, verify Cloudinary cloud name and upload preset
-- [ ] Check if upload preset is configured for unsigned uploads
-- [ ] Ensure image format and size are supported by Cloudinary
-- [ ] Consider switching to signed uploads if unsigned preset is not configured properly
-
-## Testing
-- Run the app and attempt to add a product with images
-- Check debug logs for detailed error information
-- If 400 persists, investigate Cloudinary dashboard settings
+- [x] Add TextEditingController for search bar input.
+- [x] Add state variables: List<Product> _allProducts, List<Product> _filteredProducts, String _searchQuery.
+- [x] Modify initState to fetch all products initially and set _allProducts and _filteredProducts.
+- [x] Implement _filterProducts() method to filter _allProducts based on _searchQuery and selectedCategory.
+- [x] Update search bar to use onChanged instead of onFieldSubmitted, update _searchQuery and call _filterProducts (remove navigation to SearchScreen).
+- [x] Modify category selection to update selectedCategory and call _filterProducts locally (no refetch).
+- [x] Update GridView to use _filteredProducts instead of products.
+- [x] Test the implementation by running the app and verifying search and category filtering work correctly.
+- [x] Add navigation from "See All" button in DealOfDay widget to AllProductsScreen.
+- [x] Add AllProductsScreen route to router.dart.

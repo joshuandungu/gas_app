@@ -126,6 +126,13 @@ class HomeServices {
         onSuccess: () {
           var jsonData = jsonDecode(res.body) as List;
           for (var item in jsonData) {
+            // Flatten the nested sellerId object for easier use in the Product model
+            if (item['sellerId'] != null && item['sellerId'] is Map) {
+              final sellerData = item['sellerId'];
+              item['shopName'] = sellerData['shopName']?.toString() ?? '';
+              item['shopAvatar'] = sellerData['shopAvatar']?.toString() ?? '';
+              item['sellerId'] = sellerData['_id']?.toString() ?? '';
+            }
             productList.add(Product.fromMap(item));
           }
         },

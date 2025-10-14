@@ -91,7 +91,7 @@ adminRouter.get("/api/products", async (req, res) => {
         if (req.query.category) {
             query.category = req.query.category;
         }
-        const products = await Product.find(query).populate('sellerId', 'shopName');
+        const products = await Product.find(query).populate('sellerId', 'shopName shopAvatar phoneNumber');
         res.json(products);
     } catch (e) {
         res.status(500).json({ error: e.message });
