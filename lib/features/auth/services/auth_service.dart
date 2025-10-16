@@ -277,7 +277,7 @@ class AuthService {
         },
       );
     } catch (e) {
-      showSnackBar(context, e.toString());
+      showSnackBar(context, 'Verification failed: ${e.toString()}');
     }
   }
 

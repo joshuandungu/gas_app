@@ -28,6 +28,16 @@ sellerRouter.post('/api/register-seller', async (req, res) => {
             return res.status(400).json({ msg: "You are already a seller" });
         }
 
+        // Check if user's email is verified
+        if (!user.isEmailVerified) {
+            return res.status(400).json({ msg: "Please verify your email before registering as a seller" });
+        }
+
+        // Check if user's email is verified
+        if (!user.isEmailVerified) {
+            return res.status(400).json({ msg: "Please verify your email before registering as a seller." });
+        }
+
         // Check if shop name already exists
         const existingShop = await User.findOne({ shopName });
         if (existingShop) {
@@ -66,6 +76,16 @@ sellerRouter.post('/api/register-seller-auth', auth, async (req, res) => {
         const user = await User.findById(req.user);
         if (user.type === 'seller') {
             return res.status(400).json({ msg: "You are already a seller" });
+        }
+
+        // Check if user's email is verified
+        if (!user.isEmailVerified) {
+            return res.status(400).json({ msg: "Please verify your email before registering as a seller" });
+        }
+
+        // Check if user's email is verified
+        if (!user.isEmailVerified) {
+            return res.status(400).json({ msg: "Please verify your email before registering as a seller." });
         }
 
         // Check if shop name already exists
@@ -236,6 +256,33 @@ sellerRouter.post("/seller/change-order-status", seller, async (req, res) => {
             return res.status(401).json({ msg: "You're not authorized to change this order" });
         }
         order.status = status;
+        order = await order.save();
+        res.json(order);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// update payment status
+sellerRouter.post("/seller/update-payment-status", seller, async (req, res) => {
+    try {
+        const { id, paymentStatus } = req.body;
+        let order = await Order.findById(id).populate('products.product');
+        if (!order) {
+            return res.status(404).json({ msg: 'Order not found' });
+        }
+        const hasSellerProduct = order.products.some(item => item.product && item.product.sellerId.toString() === req.user);
+        if (!hasSellerProduct) {
+            return res.status(401).json({ msg: "You're not authorized to update this order's payment status" });
+        }
+
+        // Validate payment status
+        const validStatuses = ['pending', 'paid', 'failed', 'refunded'];
+        if (!validStatuses.includes(paymentStatus)) {
+            return res.status(400).json({ msg: 'Invalid payment status' });
+        }
+
+        order.paymentStatus = paymentStatus;
         order = await order.save();
         res.json(order);
     } catch (e) {

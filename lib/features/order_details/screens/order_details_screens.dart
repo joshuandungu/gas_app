@@ -50,6 +50,20 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
     }
   }
 
+  // Change order status to specific value
+  void changeOrderStatusTo(int status) {
+    _sellerServices.changeOrderStatus(
+      context: context,
+      status: status,
+      order: widget.order,
+      onSuccess: () {
+        setState(() {
+          currentStep = status;
+        });
+      },
+    );
+  }
+
   void cancelOrder() {
     final user = Provider.of<UserProvider>(context, listen: false).user;
     if (user.type == 'seller') {
@@ -102,6 +116,75 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
         },
       );
     }
+  }
+
+  void _showPaymentStatusDialog(BuildContext context) {
+    String selectedStatus = widget.order.paymentStatus;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Update Payment Status'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Select new payment status:'),
+                  const SizedBox(height: 16),
+                  DropdownButton<String>(
+                    value: selectedStatus,
+                    isExpanded: true,
+                    items: const [
+                      DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                      DropdownMenuItem(value: 'paid', child: Text('Paid')),
+                      DropdownMenuItem(value: 'failed', child: Text('Failed')),
+                      DropdownMenuItem(value: 'refunded', child: Text('Refunded')),
+                    ],
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedStatus = newValue;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _updatePaymentStatus(selectedStatus);
+              },
+              child: const Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _updatePaymentStatus(String newStatus) {
+    _sellerServices.updatePaymentStatus(
+      context: context,
+      paymentStatus: newStatus,
+      order: widget.order,
+      onSuccess: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment status updated to $newStatus')),
+        );
+        // Refresh the order details
+        setState(() {});
+      },
+    );
   }
 
   bool _hasSellerProducts(User user) {
@@ -391,10 +474,35 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                   child: Stepper(
                     currentStep: widget.order.cancelled ? 4 : currentStep,
                     controlsBuilder: (context, details) {
-                      if (user.type == 'seller' && currentStep < 3 && !widget.order.cancelled) {
-                        return CustomButton(
-                          text: 'Done',
-                          function: () => changeOrderStatus(),
+                      if (user.type == 'seller' && !widget.order.cancelled && _hasSellerProducts(user)) {
+                        return PopupMenuButton<int>(
+                          onSelected: (status) => changeOrderStatusTo(status),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(value: 0, child: Text('Pending')),
+                            const PopupMenuItem(value: 1, child: Text('Shipped')),
+                            const PopupMenuItem(value: 2, child: Text('Out for Delivery')),
+                            const PopupMenuItem(value: 3, child: Text('Delivered')),
+                          ],
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: GlobalVariables.secondaryColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Change Status',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
                         );
                       }
                       return const SizedBox();
@@ -403,7 +511,7 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                       Step(
                         title: const Text('Pending'),
                         content: const Text(
-                          'Your order is yet to be delivered',
+                          'Your order is yet to be shipped',
                         ),
                         isActive: currentStep >= 0,
                         state: widget.order.cancelled
@@ -413,9 +521,9 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                                 : StepState.indexed,
                       ),
                       Step(
-                        title: const Text('Completed'),
+                        title: const Text('Shipped'),
                         content: const Text(
-                          'Your order has been delivered, you are yet to sign.',
+                          'Your order has been shipped and is on the way.',
                         ),
                         isActive: currentStep >= 1,
                         state: widget.order.cancelled
@@ -425,9 +533,9 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                                 : StepState.indexed,
                       ),
                       Step(
-                        title: const Text('Received'),
+                        title: const Text('Out for Delivery'),
                         content: const Text(
-                          'Your order has been delivered and signed by you.',
+                          'Your order is out for delivery.',
                         ),
                         isActive: currentStep >= 2,
                         state: widget.order.cancelled
@@ -439,7 +547,7 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                       Step(
                         title: const Text('Delivered'),
                         content: const Text(
-                          'Your order has been delivered and signed by you!',
+                          'Your order has been delivered successfully!',
                         ),
                         isActive: currentStep >= 3,
                         state: widget.order.cancelled
@@ -489,11 +597,22 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (!widget.order.cancelled && currentStep < 1)
+                      if (!widget.order.cancelled && currentStep < 2)
                         CustomButton(
                           text: 'Cancel Order',
                           function: cancelOrder,
                           color: Colors.red,
+                        ),
+                      if (user.type == 'seller' && !widget.order.cancelled && _hasSellerProducts(user))
+                        Column(
+                          children: [
+                            const SizedBox(height: 12),
+                            CustomButton(
+                              text: 'Update Payment Status',
+                              function: () => _showPaymentStatusDialog(context),
+                              color: GlobalVariables.secondaryColor,
+                            ),
+                          ],
                         ),
                     ],
                   ),

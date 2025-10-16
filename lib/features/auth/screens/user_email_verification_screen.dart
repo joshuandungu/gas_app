@@ -2,16 +2,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/services/auth_service.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/auth_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
 
 class UserEmailVerificationScreen extends StatefulWidget {
   static const String routeName = '/user-email-verification-screen';
   final String email;
   final String? redirectRoute; // Optional redirect route after verification
+  final String? role; // User role for proper navigation
 
   const UserEmailVerificationScreen({
     Key? key,
     required this.email,
     this.redirectRoute,
+    this.role,
   }) : super(key: key);
 
   // Factory constructor to handle arguments from navigation
@@ -19,6 +22,7 @@ class UserEmailVerificationScreen extends StatefulWidget {
     return UserEmailVerificationScreen(
       email: args['email'] as String,
       redirectRoute: args['redirectRoute'] as String?,
+      role: args['role'] as String?,
     );
   }
 
@@ -74,10 +78,38 @@ class _UserEmailVerificationScreenState
         email: widget.email,
         code: _codeController.text,
         onSuccess: () {
-          // Use the provided redirect route or default to user login screen
-          final redirectRoute = widget.redirectRoute ?? AuthScreen.routeName;
-          Navigator.pushNamedAndRemoveUntil(
-              context, redirectRoute, (route) => false);
+          // Show success message
+          showSnackBar(context, 'Email verified successfully! Please log in.');
+
+          // Navigate to appropriate login screen based on role
+          String loginRoute;
+          if (widget.role == 'seller') {
+            loginRoute = '/login-screen';
+            // Navigate to seller login
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  loginRoute,
+                  arguments: 'seller',
+                  (route) => false,
+                );
+              }
+            });
+          } else {
+            // Default to buyer login
+            loginRoute = '/login-screen';
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  loginRoute,
+                  arguments: 'user',
+                  (route) => false,
+                );
+              }
+            });
+          }
         },
       );
     }

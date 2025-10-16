@@ -67,7 +67,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
       _allSellers = await _homeServices.fetchTopSellers(context);
     }
     if (_currentView == ChatListView.allUsers) {
-      _allUsers = await _homeServices.fetchAllUsers(context);
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      if (user.type == 'admin') {
+        _allUsers = await _homeServices.fetchAllUsers(context);
+      } else {
+        // For non-admin users, show sellers for chat
+        _allSellers = await _homeServices.fetchTopSellers(context);
+      }
     }
     if (mounted) {
       setState(() {});
@@ -150,7 +156,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   : _currentView == ChatListView.admin
                       ? 'Chat with Admin'
                       : _currentView == ChatListView.allUsers
-                          ? 'Start a Chat'
+                          ? (user.type == 'admin' ? 'Chat with Users' : 'Start a Chat')
                           : 'My Chats',
               style: const TextStyle(color: Colors.black)),
           automaticallyImplyLeading: false,
@@ -219,7 +225,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             : _currentView == ChatListView.admin
                 ? _buildAdminChat()
                 : _currentView == ChatListView.allUsers
-                    ? _buildAllUsersList()
+                    ? (user.type == 'admin' ? _buildAllUsersList() : _buildAllSellersList())
                     : _buildConversationsList(),
       ),
     );

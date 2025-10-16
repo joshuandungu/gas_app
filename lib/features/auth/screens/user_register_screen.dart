@@ -55,7 +55,10 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
           Navigator.pushNamed(
             context,
             '/user-email-verification-screen',
-            arguments: email,
+            arguments: {
+              'email': email,
+              'role': 'user',
+            },
           );
         },
       );

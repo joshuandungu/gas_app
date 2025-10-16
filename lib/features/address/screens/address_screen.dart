@@ -66,30 +66,65 @@ class _AddressScreenState extends State<AddressScreen> {
             textController: flatBuildingController,
             hintText: 'Flat, House no, Building',
             keyboardType: TextInputType.text,
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please enter your Flat, House no, Building';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 10),
           CustomTextField(
             textController: areaController,
             hintText: 'Area, Street',
             keyboardType: TextInputType.text,
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please enter your Area, Street';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 10),
           CustomTextField(
             textController: pincodeController,
             hintText: 'District',
             keyboardType: TextInputType.text,
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please enter your District';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 10),
           CustomTextField(
             textController: cityController,
             hintText: 'Town/City',
             keyboardType: TextInputType.text,
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please enter your Town/City';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 10),
           CustomTextField(
             textController: phoneNumberController,
             hintText: 'Phone Number',
             keyboardType: TextInputType.phone,
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please enter your Phone Number';
+              }
+              // Basic phone number validation
+              final phoneRegex = RegExp(r'^\+?[0-9]{10,15}$');
+              if (!phoneRegex.hasMatch(val)) {
+                return 'Please enter a valid phone number';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 10),
         ],
@@ -274,7 +309,7 @@ class _AddressScreenState extends State<AddressScreen> {
         addressToBeUsed =
             '${flatBuildingController.text}, ${areaController.text}, District ${pincodeController.text}, ${cityController.text}';
       } else {
-        showSnackBar(context, "Please enter all values in the address form!");
+        // The form validation will show specific error messages for each field
         return;
       }
     } else if (addressFromProvider.isNotEmpty) {

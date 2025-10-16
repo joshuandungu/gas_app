@@ -393,4 +393,38 @@ class AdminServices {
     }
     return orders;
   }
+
+  Future<void> updateAboutApp({
+    required BuildContext context,
+    String? contactEmail,
+    String? contactPhone,
+    String? supportEmail,
+    String? address,
+    required VoidCallback onSuccess,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    try {
+      http.Response res = await http.post(
+        Uri.parse('$uri/admin/update-about-app'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+        body: jsonEncode({
+          if (contactEmail != null) 'contactEmail': contactEmail,
+          if (contactPhone != null) 'contactPhone': contactPhone,
+          if (supportEmail != null) 'supportEmail': supportEmail,
+          if (address != null) 'address': address,
+        }),
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: onSuccess,
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+  }
 }

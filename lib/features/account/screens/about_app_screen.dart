@@ -21,6 +21,10 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
   final TextEditingController _versionController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _developerController = TextEditingController();
+  final TextEditingController _contactEmailController = TextEditingController();
+  final TextEditingController _contactPhoneController = TextEditingController();
+  final TextEditingController _supportEmailController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
 
   @override
   void initState() {
@@ -34,6 +38,10 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
     _versionController.dispose();
     _descriptionController.dispose();
     _developerController.dispose();
+    _contactEmailController.dispose();
+    _contactPhoneController.dispose();
+    _supportEmailController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -47,6 +55,10 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
         _versionController.text = aboutData['version'] ?? '1.0.0';
         _descriptionController.text = aboutData['description'] ?? 'This app allows you to shop from various sellers, manage your orders, and more.';
         _developerController.text = aboutData['developer'] ?? 'Your Company';
+        _contactEmailController.text = aboutData['contactEmail'] ?? 'support@revosapp.com';
+        _contactPhoneController.text = aboutData['contactPhone'] ?? '+1234567890';
+        _supportEmailController.text = aboutData['supportEmail'] ?? 'help@revosapp.com';
+        _addressController.text = aboutData['address'] ?? '123 Business Street, City, Country';
       });
     }
   }
@@ -137,6 +149,56 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
                         )
                       : Text(
                           'Developed by: ${_developerController.text}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Contact Information',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  isEditing && isAdmin
+                      ? TextField(
+                          controller: _contactEmailController,
+                          decoration: const InputDecoration(labelText: 'Contact Email'),
+                          style: const TextStyle(fontSize: 16),
+                        )
+                      : Text(
+                          'Contact Email: ${_contactEmailController.text}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                  const SizedBox(height: 16),
+                  isEditing && isAdmin
+                      ? TextField(
+                          controller: _contactPhoneController,
+                          decoration: const InputDecoration(labelText: 'Contact Phone'),
+                          style: const TextStyle(fontSize: 16),
+                        )
+                      : Text(
+                          'Contact Phone: ${_contactPhoneController.text}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                  const SizedBox(height: 16),
+                  isEditing && isAdmin
+                      ? TextField(
+                          controller: _supportEmailController,
+                          decoration: const InputDecoration(labelText: 'Support Email'),
+                          style: const TextStyle(fontSize: 16),
+                        )
+                      : Text(
+                          'Support Email: ${_supportEmailController.text}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                  const SizedBox(height: 16),
+                  isEditing && isAdmin
+                      ? TextField(
+                          controller: _addressController,
+                          decoration: const InputDecoration(labelText: 'Address'),
+                          maxLines: 2,
+                          style: const TextStyle(fontSize: 16),
+                        )
+                      : Text(
+                          'Address: ${_addressController.text}',
                           style: const TextStyle(fontSize: 16),
                         ),
                 ],

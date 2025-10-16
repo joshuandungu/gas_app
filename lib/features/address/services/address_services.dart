@@ -151,10 +151,10 @@ class AddressServices {
           onSuccess?.call(order);
         } else {
           // Handle COD and other future payment methods
-          showSnackBar(context, "Your order has been placed!");
+          showSnackBar(context, "Your order has been placed successfully!");
           onCodSuccess?.call();
-          Navigator.pushReplacementNamed(context, OrderDetailsScreens.routeName,
-              arguments: order);
+          // Navigate to orders screen instead of order details
+          Navigator.pushReplacementNamed(context, '/orders');
         }
       },
     );

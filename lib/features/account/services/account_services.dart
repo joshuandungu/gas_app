@@ -34,9 +34,11 @@ class AccountServices {
         final cloudinary = CloudinaryPublic('dvgeq2l6e', 'xuvwiao4');
         CloudinaryResponse res;
         if (kIsWeb) {
+          // Create a mutable copy of the avatar bytes
+          Uint8List avatarBytes = Uint8List.fromList(newAvatar);
           res = await cloudinary.uploadFile(
             CloudinaryFile.fromBytesData(
-              newAvatar,
+              avatarBytes,
               identifier:
                   'shop_avatar_${userProvider.user.id}_${DateTime.now().millisecondsSinceEpoch}',
               folder: shopName ?? userProvider.user.shopName,

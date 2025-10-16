@@ -180,6 +180,17 @@ adminRouter.get("/admin/users", admin, async (req, res) => {
     }
 });
 
+// Public route to get all users for chat (admin only)
+adminRouter.get("/api/users", admin, async (req, res) => {
+    try {
+        const users = await User.find({ type: { $in: ["user", "seller"] } })
+            .select('name shopName type shopAvatar email phoneNumber');
+        res.json(users);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Suspend seller account
 adminRouter.post("/admin/suspend-seller", admin, async (req, res) => {
     try {
@@ -407,6 +418,10 @@ adminRouter.get("/api/about-app", async (req, res) => {
             version: aboutApp.version,
             description: aboutApp.description,
             developer: aboutApp.developer,
+            contactEmail: aboutApp.contactEmail,
+            contactPhone: aboutApp.contactPhone,
+            supportEmail: aboutApp.supportEmail,
+            address: aboutApp.address,
         });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -416,7 +431,7 @@ adminRouter.get("/api/about-app", async (req, res) => {
 // Update about app information (admin only)
 adminRouter.post("/admin/update-about-app", admin, async (req, res) => {
     try {
-        const { appName, version, description, developer } = req.body;
+        const { appName, version, description, developer, contactEmail, contactPhone, supportEmail, address } = req.body;
         let aboutApp = await AboutApp.findOne();
         if (!aboutApp) {
             aboutApp = new AboutApp();
@@ -425,6 +440,10 @@ adminRouter.post("/admin/update-about-app", admin, async (req, res) => {
         aboutApp.version = version || aboutApp.version;
         aboutApp.description = description || aboutApp.description;
         aboutApp.developer = developer || aboutApp.developer;
+        aboutApp.contactEmail = contactEmail || aboutApp.contactEmail;
+        aboutApp.contactPhone = contactPhone || aboutApp.contactPhone;
+        aboutApp.supportEmail = supportEmail || aboutApp.supportEmail;
+        aboutApp.address = address || aboutApp.address;
         await aboutApp.save();
         res.json({ msg: 'About app information updated successfully' });
     } catch (e) {
