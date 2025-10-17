@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 
 void showSnackBar(BuildContext context, String text) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -12,6 +13,12 @@ void showSnackBar(BuildContext context, String text) {
       content: Text(text),
     ),
   );
+}
+
+String formatPrice(double price) {
+  final format =
+      NumberFormat.currency(locale: 'en_KE', symbol: 'Ksh ', decimalDigits: 2);
+  return format.format(price);
 }
 
 Future<bool> hasInternetConnection() async {
