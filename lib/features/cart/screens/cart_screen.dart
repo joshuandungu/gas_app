@@ -237,7 +237,7 @@ class _CartScreenState extends State<CartScreen> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: CustomButton(
-                      text: "Proceed to Buy (${_selectedItems.length} items)",
+                      text: "Proceed to Buy (Ksh{_selectedItems.length} items)",
                       function: _selectedItems.isEmpty
                           ? null
                           : () => navigateToAddressScreen(selectedTotal),

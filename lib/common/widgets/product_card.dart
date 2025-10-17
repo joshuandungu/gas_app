@@ -140,7 +140,7 @@ class ProductCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          '\$${product.finalPrice.toStringAsFixed(2)}',
+                          '\$ksh{product.finalPrice.toStringAsFixed(2)}',
                           style: const TextStyle(
                             color: Colors.red,
                             fontSize: 14,
@@ -151,7 +151,7 @@ class ProductCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              '\$${product.price.toStringAsFixed(2)}',
+                              '\$ksh{product.price.toStringAsFixed(2)}',
                               style: const TextStyle(
                                 decoration: TextDecoration.lineThrough,
                                 color: Colors.grey,

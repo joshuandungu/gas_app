@@ -313,7 +313,7 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                     const SizedBox(height: 8),
                     _buildOrderInfoRow(
                       'Order Total:',
-                      '\$${widget.order.totalPrice.toStringAsFixed(2)}',
+                      '\$ksh{widget.order.totalPrice.toStringAsFixed(2)}',
                       valueColor: Colors.green,
                     ),
                     const SizedBox(height: 8),
@@ -395,7 +395,7 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Price: \$${widget.order.products[index].price}',
+                                'Price: \$ksh{widget.order.products[index].price}',
                                 style: const TextStyle(
                                   color: Colors.green,
                                   fontWeight: FontWeight.w600,
