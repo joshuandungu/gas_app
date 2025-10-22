@@ -7,6 +7,7 @@ import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/models/seller_request.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';
+import 'package:ecommerce_app_fluterr_nodejs/models/vendor_sales.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/seller_stats.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
@@ -502,5 +503,34 @@ class AdminServices {
       showSnackBar(context, e.toString());
       return {};
     }
+  }
+
+  Future<List<VendorSales>> getVendorSalesSummary({
+    required BuildContext context,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<VendorSales> vendorSalesList = [];
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/admin/vendor-sales-summary'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          for (var i = 0; i < jsonDecode(res.body).length; i++) {
+            vendorSalesList.add(VendorSales.fromMap(jsonDecode(res.body)[i]));
+          }
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return vendorSalesList;
   }
 }

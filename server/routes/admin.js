@@ -561,4 +561,44 @@ adminRouter.post("/admin/update-about-app", admin, async (req, res) => {
     }
 });
 
+adminRouter.get("/admin/vendor-sales-summary", admin, async (req, res) => {
+    try {
+        const vendorSales = await Order.aggregate([
+            // 1. Find completed orders
+            {
+                $match: {
+                    status: 3, // Delivered
+                    cancelled: { $ne: true }
+                }
+            },
+            // 2. Deconstruct the products array
+            { $unwind: "$products" },
+            // 3. Group by seller and order to get per-order revenue for each seller
+            {
+                $group: {
+                    _id: { sellerId: "$products.product.sellerId", orderId: "$_id" },
+                    revenue: { $sum: { $multiply: ["$products.quantity", "$products.product.finalPrice"] } },
+                }
+            },
+            // 4. Group by seller to aggregate total revenue and count distinct orders
+            {
+                $group: {
+                    _id: "$_id.sellerId",
+                    totalRevenue: { $sum: "$revenue" },
+                    completedOrders: { $sum: 1 }
+                }
+            },
+            // 5. Look up seller details
+            {
+                $lookup: { from: "users", localField: "_id", foreignField: "_id", as: "sellerInfo" }
+            },
+            { $unwind: "$sellerInfo" },
+            { $sort: { totalRevenue: -1 } }
+        ]);
+        res.json(vendorSales);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 module.exports = adminRouter;
