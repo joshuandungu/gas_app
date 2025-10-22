@@ -3,7 +3,7 @@ import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_orders_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/best_sellers_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/customer_queries_screen.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/revenue_summary_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/sales_overview_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/system_settings_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/widgets/admin_drawer.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +30,7 @@ class _AdminScreenState extends State<AdminScreen> {
     const SellersScreen(),
     const UsersScreen(),
     const BestSellersScreen(),
-    const RevenueSummaryScreen(),
+    const SalesOverviewScreen(),
     const AdminOrdersScreen(),
   ];
 
@@ -151,7 +151,7 @@ class _AdminScreenState extends State<AdminScreen> {
               ),
               child: const Icon(Icons.attach_money),
             ),
-            label: 'Revenue',
+            label: 'Sales Overview',
           ),
           BottomNavigationBarItem(
             icon: Container(

@@ -33,31 +33,37 @@ sellerRouter.post('/api/register-seller', async (req, res) => {
             return res.status(400).json({ msg: "Please verify your email before registering as a seller" });
         }
 
-        // Check if user's email is verified
-        if (!user.isEmailVerified) {
-            return res.status(400).json({ msg: "Please verify your email before registering as a seller." });
-        }
-
         // Check if shop name already exists
         const existingShop = await User.findOne({ shopName });
         if (existingShop) {
             return res.status(400).json({ msg: "Shop name already exists" });
         }
 
-        // Directly update user to seller
-        await User.findByIdAndUpdate(userId, {
-            type: "seller",
+        // Check if user already has a pending request
+        const existingRequest = await SellerRequest.findOne({
+            userId,
+            status: 'pending'
+        });
+        if (existingRequest) {
+            return res.status(400).json({ msg: "You already have a pending seller request" });
+        }
+
+        // Create seller request instead of direct update
+        const sellerRequest = new SellerRequest({
+            userId,
             shopName,
             shopDescription,
             address,
-            shopAvatar: avatarUrl,
+            avatarUrl,
             latitude,
             longitude,
             phoneNumber: phone,
-            status: "active",
+            status: 'pending'
         });
 
-        res.json({ status: 'active', msg: "Seller registration successful" });
+        await sellerRequest.save();
+
+        res.json({ status: 'pending', msg: "Seller registration request submitted successfully" });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

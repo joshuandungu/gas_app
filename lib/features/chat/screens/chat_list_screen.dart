@@ -1,4 +1,5 @@
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
+import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/chat/models/chat_room.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_detail_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/home/services/home_services.dart';
@@ -37,7 +38,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
       _currentView = ChatListView.admin;
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+        final args =
+            ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
         if (args != null) {
           if (args['view'] == 'admin') {
             _currentView = ChatListView.admin;
@@ -105,7 +107,17 @@ class _ChatListScreenState extends State<ChatListScreen> {
           cart: [],
         );
       } else {
-        receiver = chatRoom.participants.firstWhere((p) => p.id == receiverId);
+        if (chatRoom.participants.isEmpty) {
+          showSnackBar(context, 'No participants found in this chat room.');
+          return;
+        }
+        try {
+          receiver =
+              chatRoom.participants.firstWhere((p) => p.id == receiverId);
+        } catch (e) {
+          showSnackBar(context, 'Receiver not found in chat room.');
+          return;
+        }
       }
       Navigator.pushNamed(
         context,
@@ -122,6 +134,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
   void _navigateToExistingChat(ChatRoom chatRoom) {
     final currentUser = Provider.of<UserProvider>(context, listen: false).user;
     // Determine the other user in the chat
+    if (chatRoom.participants.isEmpty) {
+      showSnackBar(context, 'No participants found in this chat room.');
+      return;
+    }
     final otherUser = chatRoom.participants.firstWhere(
       (p) => p.id != currentUser.id,
       orElse: () => chatRoom.participants.first, // Fallback
@@ -156,7 +172,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   : _currentView == ChatListView.admin
                       ? 'Chat with Admin'
                       : _currentView == ChatListView.allUsers
-                          ? (user.type == 'admin' ? 'Chat with Users' : 'Start a Chat')
+                          ? (user.type == 'admin'
+                              ? 'Chat with Users'
+                              : 'Start a Chat')
                           : 'My Chats',
               style: const TextStyle(color: Colors.black)),
           automaticallyImplyLeading: false,
@@ -225,7 +243,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
             : _currentView == ChatListView.admin
                 ? _buildAdminChat()
                 : _currentView == ChatListView.allUsers
-                    ? (user.type == 'admin' ? _buildAllUsersList() : _buildAllSellersList())
+                    ? (user.type == 'admin'
+                        ? _buildAllUsersList()
+                        : _buildAllSellersList())
                     : _buildConversationsList(),
       ),
     );
@@ -254,8 +274,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
         final chatRoom = _chatRooms![index];
         final currentUser =
             Provider.of<UserProvider>(context, listen: false).user;
-        final otherUser =
-            chatRoom.participants.firstWhere((p) => p.id != currentUser.id);
+        if (chatRoom.participants.isEmpty) {
+          return ListTile(
+            title: const Text('Invalid chat room'),
+            subtitle: const Text('No participants found'),
+          );
+        }
+        final otherUser = chatRoom.participants.firstWhere(
+          (p) => p.id != currentUser.id,
+          orElse: () => chatRoom.participants.first,
+        );
 
         final unreadInfo = chatRoom.unreadCounts.firstWhere(
             (uc) => uc.userId == currentUser.id,
@@ -393,15 +421,15 @@ class _ChatListScreenState extends State<ChatListScreen> {
             backgroundImage: user.shopAvatar.isNotEmpty
                 ? NetworkImage(user.shopAvatar)
                 : null,
-            child: user.shopAvatar.isEmpty
-                ? const Icon(Icons.person)
-                : null,
+            child: user.shopAvatar.isEmpty ? const Icon(Icons.person) : null,
           ),
           title: Text(user.shopName.isNotEmpty ? user.shopName : user.name,
               style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(user.type, style: TextStyle(color: Colors.grey)),
           onTap: () => _navigateToNewChat(
-              receiverId: user.id, receiverName: user.shopName.isNotEmpty ? user.shopName : user.name),
+              receiverId: user.id,
+              receiverName:
+                  user.shopName.isNotEmpty ? user.shopName : user.name),
         );
       },
     );

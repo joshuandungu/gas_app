@@ -13,7 +13,6 @@ import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selecti
 import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/set_address.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_register_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/customer_queries_screen.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/vendor_sales_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/system_settings_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/add_product_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/chat/screens/chat_detail_screen.dart'; // This path is correct
@@ -370,11 +369,6 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => const CustomerQueriesScreen(),
-      );
-    case VendorSalesScreen.routeName:
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => const VendorSalesScreen(),
       );
     case SetAddressScreen.routeName:
       return MaterialPageRoute(

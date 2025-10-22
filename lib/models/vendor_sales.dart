@@ -1,14 +1,14 @@
 import 'dart:convert';
 
 class VendorSales {
-  final String id;
+  final String sellerId;
   final double totalRevenue;
   final int completedOrders;
   final String shopName;
   final String shopAvatar;
 
   VendorSales({
-    required this.id,
+    required this.sellerId,
     required this.totalRevenue,
     required this.completedOrders,
     required this.shopName,
@@ -17,7 +17,7 @@ class VendorSales {
 
   Map<String, dynamic> toMap() {
     return {
-      '_id': id,
+      'sellerId': sellerId,
       'totalRevenue': totalRevenue,
       'completedOrders': completedOrders,
       'shopName': shopName,
@@ -27,11 +27,11 @@ class VendorSales {
 
   factory VendorSales.fromMap(Map<String, dynamic> map) {
     return VendorSales(
-      id: map['_id'] ?? '',
+      sellerId: map['sellerId'] ?? '',
       totalRevenue: (map['totalRevenue'] ?? 0.0).toDouble(),
       completedOrders: map['completedOrders']?.toInt() ?? 0,
-      shopName: map['sellerInfo']?['shopName'] ?? 'Unknown Shop',
-      shopAvatar: map['sellerInfo']?['shopAvatar'] ?? '',
+      shopName: map['shopName'] ?? 'Unknown Shop',
+      shopAvatar: map['shopAvatar'] ?? '',
     );
   }
 

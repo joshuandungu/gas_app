@@ -112,50 +112,50 @@ adminRouter.delete("/admin/product/:id", admin, async (req, res) => {
     }
 });
 
-// Seller requests no longer needed - auto-approval implemented
 // Admin gets all pending seller requests
-// adminRouter.get("/admin/seller-requests", admin, async (req, res) => {
-//     try {
-//         const requests = await SellerRequest.find({ status: "pending" })
-//             .populate("userId", "name email") // Lấy thêm name và email từ user
-//             .lean();
-//         res.json(requests);
-//     } catch (e) {
-//         res.status(500).json({ error: e.message });
-//     }
-// });
+adminRouter.get("/admin/seller-requests", admin, async (req, res) => {
+    try {
+        const requests = await SellerRequest.find({ status: "pending" })
+            .populate("userId", "name email") // Lấy thêm name và email từ user
+            .lean();
+        res.json(requests);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // Admin approves or rejects seller request
-// adminRouter.post("/admin/process-seller-request", admin, async (req, res) => {
-//     try {
-//         const { requestId, status } = req.body;
-//         const request = await SellerRequest.findById(requestId);
+adminRouter.post("/admin/process-seller-request", admin, async (req, res) => {
+    try {
+        const { requestId, status } = req.body;
+        const request = await SellerRequest.findById(requestId);
 
-//         if (!request) {
-//             return res.status(404).json({ msg: "Request not found" });
-//         }
+        if (!request) {
+            return res.status(404).json({ msg: "Request not found" });
+        }
 
-//         request.status = status;
-//         await request.save();
+        request.status = status;
+        await request.save();
 
-//         if (status === "approved") {
-//             await User.findByIdAndUpdate(request.userId, {
-//                 type: "seller",
-//                 shopName: request.shopName,
-//                 shopDescription: request.shopDescription,
-//                 address: request.address,
-//                 shopAvatar: request.avatarUrl,
-//                 latitude: request.latitude,
-//                 longitude: request.longitude,
-//                 phoneNumber: request.phoneNumber,
-//             });
-//         }
+        if (status === "approved") {
+            await User.findByIdAndUpdate(request.userId, {
+                type: "seller",
+                shopName: request.shopName,
+                shopDescription: request.shopDescription,
+                address: request.address,
+                shopAvatar: request.avatarUrl,
+                latitude: request.latitude,
+                longitude: request.longitude,
+                phoneNumber: request.phoneNumber,
+                status: "active",
+            });
+        }
 
-//         res.json({ msg: `Seller request ${status}` });
-//     } catch (e) {
-//         res.status(500).json({ error: e.message });
-//     }
-// });
+        res.json({ msg: `Seller request ${status}` });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // Get all sellers
 adminRouter.get("/admin/sellers", admin, async (req, res) => {
@@ -436,59 +436,6 @@ adminRouter.get("/admin/sales-overview", admin, async (req, res) => {
     }
 });
 
-// Get revenue summary for all vendors
-adminRouter.get("/admin/revenue-summary", admin, async (req, res) => {
-    try {
-        const summaryData = await Order.aggregate([
-            {
-                $match: {
-                    status: 3,
-                    cancelled: false,
-                },
-            },
-            { $unwind: "$products" },
-            {
-                $lookup: {
-                    from: "users",
-                    localField: "products.product.sellerId",
-                    foreignField: "_id",
-                    as: "seller",
-                },
-            },
-            { $unwind: "$seller" },
-            {
-                $group: {
-                    _id: "$seller._id",
-                    shopName: { $first: "$seller.shopName" },
-                    shopAvatar: { $first: "$seller.shopAvatar" },
-                    revenue: {
-                        $sum: {
-                            $multiply: ["$products.quantity", "$products.product.finalPrice"],
-                        },
-                    },
-                    orders: { $sum: 1 },
-                },
-            },
-            { $sort: { revenue: -1 } },
-            {
-                $group: {
-                    _id: null,
-                    totalRevenue: { $sum: "$revenue" },
-                    vendors: { $push: "$$ROOT" },
-                },
-            },
-        ]);
-
-        if (summaryData.length === 0) {
-            return res.json({ totalRevenue: 0, vendors: [] });
-        }
-
-        res.json(summaryData[0]);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
-
 // Get all orders for admin
 adminRouter.get("/admin/orders", admin, async (req, res) => {
     try {
@@ -561,16 +508,29 @@ adminRouter.post("/admin/update-about-app", admin, async (req, res) => {
     }
 });
 
-adminRouter.get("/admin/vendor-sales-summary", admin, async (req, res) => {
+adminRouter.get("/admin/vendor-sales", admin, async (req, res) => {
     try {
+        const { startDate, endDate, category } = req.query;
+
+        let matchQuery = {
+            status: 3, // Delivered
+            cancelled: { $ne: true }
+        };
+
+        if (startDate && endDate) {
+            matchQuery.orderedAt = {
+                $gte: parseInt(startDate),
+                $lte: parseInt(endDate),
+            };
+        }
+
+        const categoryMatch = category && category !== 'All Categories'
+            ? { "products.product.category": category }
+            : {};
+
         const vendorSales = await Order.aggregate([
             // 1. Find completed orders
-            {
-                $match: {
-                    status: 3, // Delivered
-                    cancelled: { $ne: true }
-                }
-            },
+            { $match: matchQuery },
             // 2. Deconstruct the products array
             { $unwind: "$products" },
             // 3. Group by seller and order to get per-order revenue for each seller
@@ -580,6 +540,7 @@ adminRouter.get("/admin/vendor-sales-summary", admin, async (req, res) => {
                     revenue: { $sum: { $multiply: ["$products.quantity", "$products.product.finalPrice"] } },
                 }
             },
+            { $match: categoryMatch },
             // 4. Group by seller to aggregate total revenue and count distinct orders
             {
                 $group: {
@@ -593,12 +554,22 @@ adminRouter.get("/admin/vendor-sales-summary", admin, async (req, res) => {
                 $lookup: { from: "users", localField: "_id", foreignField: "_id", as: "sellerInfo" }
             },
             { $unwind: "$sellerInfo" },
-            { $sort: { totalRevenue: -1 } }
+            { $sort: { totalRevenue: -1 } },
+            // 6. Project the final fields
+            {
+                $project: {
+                    _id: 0,
+                    sellerId: "$_id",
+                    shopName: "$sellerInfo.shopName",
+                    shopAvatar: "$sellerInfo.shopAvatar",
+                    totalRevenue: "$totalRevenue",
+                    completedOrders: "$completedOrders"
+                }
+            }
         ]);
         res.json(vendorSales);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
-
 module.exports = adminRouter;

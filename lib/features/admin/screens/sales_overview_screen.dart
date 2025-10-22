@@ -1,6 +1,6 @@
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/services/admin_services.dart';
-import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';
+import 'package:ecommerce_app_fluterr_nodejs/models/vendor_sales.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -13,9 +13,8 @@ class SalesOverviewScreen extends StatefulWidget {
 }
 
 class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
-  List<Order> orders = [];
+  List<VendorSales> salesData = [];
   bool isLoading = false;
-  Map<String, Map<String, dynamic>> salesData = {};
   final AdminServices adminServices = AdminServices();
 
   // Filter variables
@@ -32,52 +31,18 @@ class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
   Future<void> fetchSalesOverview() async {
     setState(() => isLoading = true);
     try {
-      List<Map<String, dynamic>> data = await adminServices.getSalesOverview(
-        context: context,
-        startDate: startDate?.millisecondsSinceEpoch,
-        endDate: endDate?.millisecondsSinceEpoch,
-        category: selectedCategory,
-      );
-
-      salesData.clear();
-      for (var item in data) {
-        String sellerId = item['_id'];
-        salesData[sellerId] = {
-          'revenue': item['revenue']?.toDouble() ?? 0.0,
-          'orders': item['orders'] ?? 0,
-          'shopName': item['shopName'] ?? 'Unknown Shop',
-          'shopAvatar': item['shopAvatar'] ?? '',
-        };
-      }
+      // This now returns List<VendorSales> but the service was modified to return List<Map>
+      // to avoid breaking other parts. Let's adapt.
+      var data = await adminServices.getVendorSalesSummary(context: context);
+      setState(() {
+        salesData = data;
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
     }
     setState(() => isLoading = false);
-  }
-
-  void aggregateSalesData() {
-    salesData.clear();
-    for (var order in orders) {
-      if (order.status == 3 && !order.cancelled) {
-        for (var product in order.products) {
-          String sellerId = product.sellerId;
-          double revenue = product.finalPrice * order.quantity[order.products.indexOf(product)];
-          if (salesData.containsKey(sellerId)) {
-            salesData[sellerId]!['revenue'] += revenue;
-            salesData[sellerId]!['orders'] += 1;
-          } else {
-            salesData[sellerId] = {
-              'revenue': revenue,
-              'orders': 1,
-              'shopName': product.shopName ?? 'Unknown Shop',
-              'shopAvatar': product.shopAvatar ?? '',
-            };
-          }
-        }
-      }
-    }
   }
 
   Future<void> _selectDateRange(BuildContext context) async {
@@ -131,7 +96,8 @@ class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
                         ),
                         items: [
                           'All Categories',
-                          ...GlobalVariables.categoryImages.map((e) => e['title'] as String)
+                          ...GlobalVariables.categoryImages
+                              .map((e) => e['title'] as String)
                         ].map((String category) {
                           return DropdownMenuItem<String>(
                             value: category,
@@ -159,7 +125,8 @@ class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 16),
                         ),
                       ),
                     ),
@@ -172,14 +139,14 @@ class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
                     _buildSummaryStat(
                       Icons.attach_money,
                       'Total Revenue',
-                      '\$${salesData.values.fold(0.0, (sum, data) => sum + data['revenue']).toStringAsFixed(2)}',
+                      '\$${salesData.fold(0.0, (sum, data) => sum + data.totalRevenue).toStringAsFixed(2)}',
                       Colors.green,
                     ),
                     const SizedBox(width: 16),
                     _buildSummaryStat(
                       Icons.shopping_bag,
                       'Total Orders',
-                      '${salesData.values.fold<int>(0, (sum, data) => sum + (data['orders'] as num).toInt())}',
+                      '${salesData.fold<int>(0, (sum, data) => sum + data.completedOrders)}',
                       Colors.blue,
                     ),
                     const SizedBox(width: 16),
@@ -202,28 +169,31 @@ class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
                     : ListView.builder(
                         itemCount: salesData.length,
                         itemBuilder: (context, index) {
-                          String sellerId = salesData.keys.elementAt(index);
-                          Map<String, dynamic> data = salesData[sellerId]!;
+                          final vendor = salesData[index];
                           return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundImage: data['shopAvatar'].isNotEmpty
-                                    ? NetworkImage(data['shopAvatar'])
+                                backgroundImage: vendor.shopAvatar.isNotEmpty
+                                    ? NetworkImage(vendor.shopAvatar)
                                     : null,
-                                child: data['shopAvatar'].isEmpty
+                                child: vendor.shopAvatar.isEmpty
                                     ? const Icon(Icons.store)
                                     : null,
                               ),
                               title: Text(
-                                data['shopName'],
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                vendor.shopName,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Orders: ${data['orders']}'),
-                                  Text('Revenue: \$${data['revenue'].toStringAsFixed(2)}'),
+                                  Text(
+                                      'Completed Orders: ${vendor.completedOrders}'),
+                                  Text(
+                                      'Revenue: \$${vendor.totalRevenue.toStringAsFixed(2)}'),
                                 ],
                               ),
                             ),
@@ -236,7 +206,8 @@ class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
     );
   }
 
-  Widget _buildSummaryStat(IconData icon, String label, String value, Color color) {
+  Widget _buildSummaryStat(
+      IconData icon, String label, String value, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(8),
