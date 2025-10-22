@@ -427,4 +427,80 @@ class AdminServices {
       showSnackBar(context, e.toString());
     }
   }
+
+  Future<List<Map<String, dynamic>>> getSalesOverview({
+    required BuildContext context,
+    int? startDate,
+    int? endDate,
+    String? category,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    try {
+      String url = '$uri/admin/sales-overview';
+      List<String> params = [];
+      if (startDate != null) {
+        params.add('startDate=$startDate');
+      }
+      if (endDate != null) {
+        params.add('endDate=$endDate');
+      }
+      if (category != null && category != 'All Categories') {
+        params.add('category=$category');
+      }
+      if (params.isNotEmpty) {
+        url += '?' + params.join('&');
+      }
+
+      http.Response res = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {},
+      );
+
+      List<Map<String, dynamic>> salesData = (jsonDecode(res.body) as List)
+          .map((data) => data as Map<String, dynamic>)
+          .toList();
+
+      return salesData;
+    } catch (e) {
+      showSnackBar(context, e.toString());
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> getRevenueSummary({
+    required BuildContext context,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/admin/revenue-summary'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {},
+      );
+
+      Map<String, dynamic> summaryData = jsonDecode(res.body) as Map<String, dynamic>;
+
+      return summaryData;
+    } catch (e) {
+      showSnackBar(context, e.toString());
+      return {};
+    }
+  }
 }

@@ -1,15 +1,13 @@
-
-
-
 const express = require("express");
 const { Product } = require("../models/product");
 const admin = require("../middlewares/admin");
 const Order = require("../models/order");
 const SellerRequest = require("../models/sellerRequest");
 const bcryptjs = require('bcryptjs');
-const adminRouter = express.Router();
 const User = require("../models/user");
 const AboutApp = require("../models/aboutApp");
+
+const adminRouter = express.Router();
 
 // DEV ONLY: Create admin user
 adminRouter.post('/admin/create-admin', async (req, res) => {
@@ -55,6 +53,7 @@ adminRouter.post('/admin/login', async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+
 // Admin adds a new product
 adminRouter.post("/admin/add-product", admin, async (req, res) => {
     try {
@@ -112,8 +111,6 @@ adminRouter.delete("/admin/product/:id", admin, async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
-
-
 
 // Seller requests no longer needed - auto-approval implemented
 // Admin gets all pending seller requests
@@ -324,6 +321,7 @@ adminRouter.get("/admin/best-sellers", admin, async (req, res) => {
         // Base query để lấy các đơn hàng đã delivered
         let matchQuery = {
             status: 3,
+            cancelled: false,
         };
 
         // Nếu có tháng và năm, thêm filter theo thời gian
@@ -361,7 +359,7 @@ adminRouter.get("/admin/best-sellers", admin, async (req, res) => {
                     shopAvatar: { $first: "$seller.shopAvatar" },
                     totalRevenue: {
                         $sum: {
-                            $multiply: ["$products.quantity", "$products.product.price"],
+                            $multiply: ["$products.quantity", "$products.product.finalPrice"],
                         },
                     },
                     totalOrders: { $sum: 1 },
@@ -374,6 +372,118 @@ adminRouter.get("/admin/best-sellers", admin, async (req, res) => {
         ]);
 
         res.json(sellers);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Get sales overview with filters
+adminRouter.get("/admin/sales-overview", admin, async (req, res) => {
+    try {
+        const { startDate, endDate, category } = req.query;
+
+        // Base query để lấy các đơn hàng đã delivered
+        let matchQuery = {
+            status: 3,
+            cancelled: false,
+        };
+
+        // Nếu có date range, thêm filter theo thời gian
+        if (startDate && endDate) {
+            matchQuery.orderedAt = {
+                $gte: parseInt(startDate),
+                $lte: parseInt(endDate),
+            };
+        }
+
+        // Thêm điều kiện category nếu có
+        const categoryMatch = category && category !== 'All Categories'
+            ? { "products.product.category": category }
+            : {};
+
+        const salesData = await Order.aggregate([
+            { $match: matchQuery },
+            { $unwind: "$products" },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "products.product.sellerId",
+                    foreignField: "_id",
+                    as: "seller",
+                },
+            },
+            { $unwind: "$seller" },
+            { $match: categoryMatch },
+            {
+                $group: {
+                    _id: "$seller._id",
+                    shopName: { $first: "$seller.shopName" },
+                    shopAvatar: { $first: "$seller.shopAvatar" },
+                    revenue: {
+                        $sum: {
+                            $multiply: ["$products.quantity", "$products.product.finalPrice"],
+                        },
+                    },
+                    orders: { $sum: 1 },
+                },
+            },
+            { $sort: { revenue: -1 } },
+        ]);
+
+        res.json(salesData);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Get revenue summary for all vendors
+adminRouter.get("/admin/revenue-summary", admin, async (req, res) => {
+    try {
+        const summaryData = await Order.aggregate([
+            {
+                $match: {
+                    status: 3,
+                    cancelled: false,
+                },
+            },
+            { $unwind: "$products" },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "products.product.sellerId",
+                    foreignField: "_id",
+                    as: "seller",
+                },
+            },
+            { $unwind: "$seller" },
+            {
+                $group: {
+                    _id: "$seller._id",
+                    shopName: { $first: "$seller.shopName" },
+                    shopAvatar: { $first: "$seller.shopAvatar" },
+                    revenue: {
+                        $sum: {
+                            $multiply: ["$products.quantity", "$products.product.finalPrice"],
+                        },
+                    },
+                    orders: { $sum: 1 },
+                },
+            },
+            { $sort: { revenue: -1 } },
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue: { $sum: "$revenue" },
+                    vendors: { $push: "$$ROOT" },
+                },
+            },
+        ]);
+
+        if (summaryData.length === 0) {
+            return res.json({ totalRevenue: 0, vendors: [] });
+        }
+
+        res.json(summaryData[0]);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

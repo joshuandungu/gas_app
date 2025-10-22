@@ -127,7 +127,7 @@ class SearchedProduct extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          '\$${product.finalPrice.toStringAsFixed(2)}',
+                          'Ksh ${product.finalPrice.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -137,7 +137,7 @@ class SearchedProduct extends StatelessWidget {
                         if (isDiscounted) ...[
                           const SizedBox(width: 8),
                           Text(
-                            '\$${product.price.toStringAsFixed(2)}',
+                            'Ksh ${product.price.toStringAsFixed(2)}',
                             style: const TextStyle(
                               decoration: TextDecoration.lineThrough,
                               color: Colors.grey,

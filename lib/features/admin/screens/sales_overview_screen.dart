@@ -2,6 +2,7 @@ import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/services/admin_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class SalesOverviewScreen extends StatefulWidget {
   static const String routeName = '/admin-sales-overview';
@@ -17,17 +18,37 @@ class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
   Map<String, Map<String, dynamic>> salesData = {};
   final AdminServices adminServices = AdminServices();
 
+  // Filter variables
+  String selectedCategory = 'All Categories';
+  DateTime? startDate;
+  DateTime? endDate;
+
   @override
   void initState() {
     super.initState();
-    fetchAllOrders();
+    fetchSalesOverview();
   }
 
-  Future<void> fetchAllOrders() async {
+  Future<void> fetchSalesOverview() async {
     setState(() => isLoading = true);
     try {
-      orders = await adminServices.fetchAllOrders(context);
-      aggregateSalesData();
+      List<Map<String, dynamic>> data = await adminServices.getSalesOverview(
+        context: context,
+        startDate: startDate?.millisecondsSinceEpoch,
+        endDate: endDate?.millisecondsSinceEpoch,
+        category: selectedCategory,
+      );
+
+      salesData.clear();
+      for (var item in data) {
+        String sellerId = item['_id'];
+        salesData[sellerId] = {
+          'revenue': item['revenue']?.toDouble() ?? 0.0,
+          'orders': item['orders'] ?? 0,
+          'shopName': item['shopName'] ?? 'Unknown Shop',
+          'shopAvatar': item['shopAvatar'] ?? '',
+        };
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
@@ -39,7 +60,7 @@ class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
   void aggregateSalesData() {
     salesData.clear();
     for (var order in orders) {
-      if (order.status == 3 && !order.cancelled) { // Assuming status 3 is delivered
+      if (order.status == 3 && !order.cancelled) {
         for (var product in order.products) {
           String sellerId = product.sellerId;
           double revenue = product.finalPrice * order.quantity[order.products.indexOf(product)];
@@ -59,6 +80,24 @@ class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
     }
   }
 
+  Future<void> _selectDateRange(BuildContext context) async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: startDate != null && endDate != null
+          ? DateTimeRange(start: startDate!, end: endDate!)
+          : null,
+    );
+    if (picked != null) {
+      setState(() {
+        startDate = picked.start;
+        endDate = picked.end;
+      });
+      fetchSalesOverview();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,105 +112,118 @@ class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
                   color: Colors.grey.withOpacity(0.3),
                   spreadRadius: 1,
                   blurRadius: 5,
-                  offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: const Center(
-              child: Text(
-                'Sales Overview',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+            child: Column(
+              children: [
+                // Filters Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selectedCategory,
+                        decoration: const InputDecoration(
+                          labelText: 'Category',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(),
+                        ),
+                        items: [
+                          'All Categories',
+                          ...GlobalVariables.categoryImages.map((e) => e['title'] as String)
+                        ].map((String category) {
+                          return DropdownMenuItem<String>(
+                            value: category,
+                            child: Text(category),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedCategory = newValue!;
+                          });
+                          fetchSalesOverview();
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _selectDateRange(context),
+                        icon: const Icon(Icons.date_range),
+                        label: Text(
+                          startDate != null && endDate != null
+                              ? '${DateFormat('MMM dd').format(startDate!)} - ${DateFormat('MMM dd').format(endDate!)}'
+                              : 'Select Date Range',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+                const SizedBox(height: 16),
+                // Summary Stats
+                Row(
+                  children: [
+                    _buildSummaryStat(
+                      Icons.attach_money,
+                      'Total Revenue',
+                      '\$${salesData.values.fold(0.0, (sum, data) => sum + data['revenue']).toStringAsFixed(2)}',
+                      Colors.green,
+                    ),
+                    const SizedBox(width: 16),
+                    _buildSummaryStat(
+                      Icons.shopping_bag,
+                      'Total Orders',
+                      '${salesData.values.fold<int>(0, (sum, data) => sum + (data['orders'] as num).toInt())}',
+                      Colors.blue,
+                    ),
+                    const SizedBox(width: 16),
+                    _buildSummaryStat(
+                      Icons.store,
+                      'Total Sellers',
+                      '${salesData.length}',
+                      Colors.orange,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : salesData.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.analytics_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No sales data available',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
+                    ? const Center(child: Text('No sales data available'))
                     : ListView.builder(
-                        padding: const EdgeInsets.all(16),
                         itemCount: salesData.length,
                         itemBuilder: (context, index) {
                           String sellerId = salesData.keys.elementAt(index);
-                          var data = salesData[sellerId]!;
+                          Map<String, dynamic> data = salesData[sellerId]!;
                           return Card(
-                            elevation: 4,
-                            margin: const EdgeInsets.only(bottom: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
+                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: data['shopAvatar'].isNotEmpty
+                                    ? NetworkImage(data['shopAvatar'])
+                                    : null,
+                                child: data['shopAvatar'].isEmpty
+                                    ? const Icon(Icons.store)
+                                    : null,
+                              ),
+                              title: Text(
+                                data['shopName'],
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  CircleAvatar(
-                                    radius: 30,
-                                    backgroundColor: Colors.grey[200],
-                                    backgroundImage: data['shopAvatar'].isNotEmpty
-                                        ? NetworkImage(data['shopAvatar'])
-                                        : null,
-                                    child: data['shopAvatar'].isEmpty
-                                        ? const Icon(Icons.store, size: 30)
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          data['shopName'],
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            _buildStatItem(
-                                              Icons.attach_money,
-                                              'Revenue',
-                                              '\$${data['revenue'].toStringAsFixed(2)}',
-                                              Colors.green,
-                                            ),
-                                            const SizedBox(width: 16),
-                                            _buildStatItem(
-                                              Icons.shopping_bag,
-                                              'Orders',
-                                              data['orders'].toString(),
-                                              Colors.blue,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                  Text('Orders: ${data['orders']}'),
+                                  Text('Revenue: \$${data['revenue'].toStringAsFixed(2)}'),
                                 ],
                               ),
                             ),
@@ -184,7 +236,7 @@ class _SalesOverviewScreenState extends State<SalesOverviewScreen> {
     );
   }
 
-  Widget _buildStatItem(IconData icon, String label, String value, Color color) {
+  Widget _buildSummaryStat(IconData icon, String label, String value, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(8),

@@ -287,7 +287,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '\$${widget.product.finalPrice.toStringAsFixed(2)}',
+                                'Ksh ${widget.product.finalPrice.toStringAsFixed(2)}',
                                 style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
@@ -297,7 +297,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               if (isDiscounted) ...[
                                 const SizedBox(width: 8),
                                 Text(
-                                  '\$${widget.product.price.toStringAsFixed(2)}',
+                                  'Ksh ${widget.product.price.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     decoration: TextDecoration.lineThrough,
                                     color: Colors.grey,

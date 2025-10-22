@@ -3,6 +3,7 @@ import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_orders_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/best_sellers_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/customer_queries_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/revenue_summary_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/system_settings_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/widgets/admin_drawer.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ class _AdminScreenState extends State<AdminScreen> {
     const SellersScreen(),
     const UsersScreen(),
     const BestSellersScreen(),
+    const RevenueSummaryScreen(),
     const AdminOrdersScreen(),
   ];
 
@@ -141,6 +143,23 @@ class _AdminScreenState extends State<AdminScreen> {
                 border: Border(
                   top: BorderSide(
                     color: _page == 4
+                        ? GlobalVariables.selectedNavBarColor
+                        : GlobalVariables.backgroundColor,
+                    width: bottomBarBorderWidth,
+                  ),
+                ),
+              ),
+              child: const Icon(Icons.attach_money),
+            ),
+            label: 'Revenue',
+          ),
+          BottomNavigationBarItem(
+            icon: Container(
+              width: bottomBarWidth,
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: _page == 5
                         ? GlobalVariables.selectedNavBarColor
                         : GlobalVariables.backgroundColor,
                     width: bottomBarBorderWidth,
