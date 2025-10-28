@@ -20,7 +20,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen>
     with TickerProviderStateMixin {
   List<Product>? products;
   ShopStats? shopStats;
-  User? shopOwner;  // Add this to store shop owner data
+  User? shopOwner; // Add this to store shop owner data
   final SellerServices sellerServices = SellerServices();
   late TabController _tabController;
 
@@ -42,8 +42,6 @@ class _ShopProfileScreenState extends State<ShopProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    
-
     return Scaffold(
       body: shopOwner == null
           ? const Center(child: CircularProgressIndicator())
@@ -69,7 +67,12 @@ class _ShopProfileScreenState extends State<ShopProfileScreen>
                         children: [
                           CircleAvatar(
                             radius: 70,
-                            backgroundImage: NetworkImage(shopOwner!.shopAvatar),
+                            backgroundImage: shopOwner!.shopAvatar.isNotEmpty
+                                ? NetworkImage(shopOwner!.shopAvatar)
+                                : null,
+                            child: shopOwner!.shopAvatar.isEmpty
+                                ? const Icon(Icons.storefront, size: 70)
+                                : null,
                           ),
                           const SizedBox(height: 10),
                           Text(
@@ -203,7 +206,6 @@ class _ShopProfileScreenState extends State<ShopProfileScreen>
       ],
     );
   }
-
 
   // Thêm button Follow/Unfollow
   Widget _buildFollowButton() {

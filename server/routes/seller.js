@@ -4,6 +4,7 @@ const Order = require("../models/order");
 const sellerRouter = express.Router();
 const seller = require("../middlewares/seller");
 
+const config = require('../config/config'); // Import config
 const SellerRequest = require('../models/sellerRequest');
 
 const auth = require('../middlewares/auth');
@@ -13,9 +14,65 @@ const Notification = require('../models/notification');
 
 
 // Register as seller
-sellerRouter.post('/api/register-seller', auth, async (req, res) => {
+sellerRouter.post('/api/register-seller', async (req, res) => {
     try {
-        const { shopName, shopDescription, address, avatarUrl } = req.body;
+        const { shopName, shopDescription, address, avatarUrl, userId, latitude, longitude, phone } = req.body;
+
+        if (!shopName || !shopDescription || !address || !avatarUrl || !userId) {
+            return res.status(400).json({ msg: "All fields are required" });
+        }
+
+        // Check if user is already a seller
+        const user = await User.findById(userId);
+        if (user.type === 'seller') {
+            return res.status(400).json({ msg: "You are already a seller" });
+        }
+
+        // Check if user's email is verified
+        if (!user.isEmailVerified) {
+            return res.status(400).json({ msg: "Please verify your email before registering as a seller" });
+        }
+
+        // Check if shop name already exists
+        const existingShop = await User.findOne({ shopName });
+        if (existingShop) {
+            return res.status(400).json({ msg: "Shop name already exists" });
+        }
+
+        // Check if user already has a pending request
+        const existingRequest = await SellerRequest.findOne({
+            userId,
+            status: 'pending'
+        });
+        if (existingRequest) {
+            return res.status(400).json({ msg: "You already have a pending seller request" });
+        }
+
+        // Create seller request instead of direct update
+        const sellerRequest = new SellerRequest({
+            userId,
+            shopName,
+            shopDescription,
+            address,
+            avatarUrl,
+            latitude,
+            longitude,
+            phoneNumber: phone,
+            status: 'pending'
+        });
+
+        await sellerRequest.save();
+
+        res.json({ status: 'pending', msg: "Seller registration request submitted successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Register as seller for existing users (authenticated)
+sellerRouter.post('/api/register-seller-auth', auth, async (req, res) => {
+    try {
+        const { shopName, shopDescription, address, avatarUrl, latitude, longitude, phone } = req.body;
 
         if (!shopName || !shopDescription || !address || !avatarUrl) {
             return res.status(400).json({ msg: "All fields are required" });
@@ -27,33 +84,36 @@ sellerRouter.post('/api/register-seller', auth, async (req, res) => {
             return res.status(400).json({ msg: "You are already a seller" });
         }
 
+        // Check if user's email is verified
+        if (!user.isEmailVerified) {
+            return res.status(400).json({ msg: "Please verify your email before registering as a seller" });
+        }
+
+        // Check if user's email is verified
+        if (!user.isEmailVerified) {
+            return res.status(400).json({ msg: "Please verify your email before registering as a seller." });
+        }
+
         // Check if shop name already exists
         const existingShop = await User.findOne({ shopName });
         if (existingShop) {
             return res.status(400).json({ msg: "Shop name already exists" });
         }
 
-        // Check if user already has a pending request
-        const existingRequest = await SellerRequest.findOne({
-            userId: req.user,
-            status: 'pending'
-        });
-
-        if (existingRequest) {
-            return res.status(400).json({ msg: "You already have a pending request" });
-        }
-
-        // Create new seller request
-        const sellerRequest = new SellerRequest({
-            userId: req.user,
+        // Directly update user to seller
+        await User.findByIdAndUpdate(req.user, {
+            type: "seller",
             shopName,
             shopDescription,
             address,
-            avatarUrl,
+            shopAvatar: avatarUrl,
+            latitude,
+            longitude,
+            phoneNumber: phone,
+            status: "active",
         });
 
-        await sellerRequest.save();
-        res.json({ status: 'pending', msg: "Seller request submitted successfully" });
+        res.json({ status: 'active', msg: "Seller registration successful" });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -147,7 +207,7 @@ sellerRouter.post("/seller/add-product", seller, async (req, res) => {
 // get all products
 sellerRouter.get("/seller/get-products", seller, async (req, res) => {
     try {
-        const products = await Product.find({ sellerId: req.user });
+        const products = await Product.find({ sellerId: req.user }).populate('sellerId', 'shopName shopAvatar phoneNumber');
         res.json(products);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -175,9 +235,15 @@ sellerRouter.post("/seller/delete-product", seller, async (req, res) => {
 sellerRouter.get("/seller/get-orders", seller, async (req, res) => {
     try {
         const orders = await Order.find({
-            'products.product.sellerId': req.user
-        });
-        res.json(orders);
+            'products.product': { $exists: true }
+        }).populate('products.product');
+
+        // Filter orders to include only those with products from this seller
+        const sellerOrders = orders.filter(order =>
+            order.products.some(item => item.product && item.product.sellerId.toString() === req.user)
+        );
+
+        res.json(sellerOrders);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -187,14 +253,42 @@ sellerRouter.get("/seller/get-orders", seller, async (req, res) => {
 sellerRouter.post("/seller/change-order-status", seller, async (req, res) => {
     try {
         const { id, status } = req.body;
-        let order = await Order.findOne({
-            _id: id,
-            'products.product.sellerId': req.user
-        });
+        let order = await Order.findById(id).populate('products.product');
         if (!order) {
-            return res.status(404).json({ msg: "Order not found or you're not authorized" });
+            return res.status(404).json({ msg: 'Order not found' });
+        }
+        const hasSellerProduct = order.products.some(item => item.product && item.product.sellerId.toString() === req.user);
+        if (!hasSellerProduct) {
+            return res.status(401).json({ msg: "You're not authorized to change this order" });
         }
         order.status = status;
+        order = await order.save();
+        res.json(order);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// update payment status
+sellerRouter.post("/seller/update-payment-status", seller, async (req, res) => {
+    try {
+        const { id, paymentStatus } = req.body;
+        let order = await Order.findById(id).populate('products.product');
+        if (!order) {
+            return res.status(404).json({ msg: 'Order not found' });
+        }
+        const hasSellerProduct = order.products.some(item => item.product && item.product.sellerId.toString() === req.user);
+        if (!hasSellerProduct) {
+            return res.status(401).json({ msg: "You're not authorized to update this order's payment status" });
+        }
+
+        // Validate payment status
+        const validStatuses = ['pending', 'paid', 'failed', 'refunded'];
+        if (!validStatuses.includes(paymentStatus)) {
+            return res.status(400).json({ msg: 'Invalid payment status' });
+        }
+
+        order.paymentStatus = paymentStatus;
         order = await order.save();
         res.json(order);
     } catch (e) {
@@ -218,7 +312,7 @@ sellerRouter.get("/seller/analytics", seller, async (req, res) => {
             Essentials: 0,
             Appliances: 0,
             Books: 0,
-      Fashion: 0,
+            Fashion: 0,
             'Gas Products': 0
         };
 
@@ -459,6 +553,69 @@ sellerRouter.get("/api/sellers", auth, async (req, res) => {
         // Find all users with type 'seller' and select only needed fields
         const sellers = await User.find({ type: 'seller' }).select('shopName shopAvatar');
         res.json(sellers);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Cancel order (for sellers)
+sellerRouter.post("/seller/orders/cancel/:id", seller, async (req, res) => {
+    try {
+        const order = await Order.findOne({
+            _id: req.params.id,
+            'products.product.sellerId': req.user
+        });
+
+        if (!order) {
+            return res.status(404).json({ msg: "Order not found or you're not authorized" });
+        }
+
+        if (order.status >= 1) {
+            return res.status(400).json({ msg: "Cannot cancel order that has been shipped" });
+        }
+
+        if (order.cancelled) {
+            return res.status(400).json({ msg: "Order is already cancelled" });
+        }
+
+        // Restore product quantities for this seller's products
+        for (let i = 0; i < order.products.length; i++) {
+            if (order.products[i].product && order.products[i].product.sellerId.toString() === req.user) {
+                const product = await Product.findById(order.products[i].product._id);
+                if (product) {
+                    product.quantity += order.products[i].quantity;
+                    await product.save();
+                }
+            }
+        }
+
+        order.cancelled = true;
+        await order.save();
+
+        res.json({ msg: "Order cancelled successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Delete order (for sellers)
+sellerRouter.delete("/seller/orders/:id", seller, async (req, res) => {
+    try {
+        const order = await Order.findOne({
+            _id: req.params.id,
+            'products.product.sellerId': req.user
+        });
+
+        if (!order) {
+            return res.status(404).json({ msg: "Order not found or you're not authorized" });
+        }
+
+        if (!order.cancelled) {
+            return res.status(400).json({ msg: "Can only delete cancelled orders" });
+        }
+
+        await Order.findByIdAndDelete(req.params.id);
+        res.json({ msg: "Order deleted successfully" });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

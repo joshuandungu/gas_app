@@ -40,7 +40,7 @@ class BarChartAnalytics extends StatelessWidget {
               showTitles: true,
               getTitlesWidget: (value, meta) {
                 return Text(
-                  '\$${value.toInt()}',
+                  'Ksh ${value.toInt()}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,

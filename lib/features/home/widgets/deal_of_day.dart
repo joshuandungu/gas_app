@@ -211,7 +211,7 @@ class _DealOfDayState extends State<DealOfDay> {
                 Row(
                   children: [
                     Text(
-                      '\$${product.finalPrice.toStringAsFixed(2)}',
+                      'Ksh ${product.finalPrice.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -221,7 +221,7 @@ class _DealOfDayState extends State<DealOfDay> {
                     if (isDiscounted(product)) ...[
                       const SizedBox(width: 8),
                       Text(
-                        '\$${product.price.toStringAsFixed(2)}',
+                        'Ksh ${product.price.toStringAsFixed(2)}',
                         style: TextStyle(
                           decoration: TextDecoration.lineThrough,
                           color: Colors.grey[600],
@@ -321,7 +321,7 @@ class _DealOfDayState extends State<DealOfDay> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '\$${product.finalPrice.toStringAsFixed(2)}',
+                            'Ksh ${product.finalPrice.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -411,7 +411,9 @@ class _DealOfDayState extends State<DealOfDay> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/all-products');
+                      },
                       child: const Text('See All'),
                     ),
                   ],

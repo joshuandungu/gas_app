@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/models/sales.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/services/seller_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/widgets/category_products_chart.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/seller/widgets/sales_summary_widget.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({Key? key}) : super(key: key);
@@ -32,13 +33,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget build(BuildContext context) {
     return sales == null || totalEarnings == null
         ? const Center(child: CircularProgressIndicator())
-        : Padding(
+        : SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Sales Summary Widget
+                const SalesSummaryWidget(),
+                const SizedBox(height: 20),
+
+                // Existing earnings display
                 Text(
-                  'Total Earnings: \$${totalEarnings!.toStringAsFixed(2)}',
+                  'Total Earnings: Ksh ${totalEarnings!.toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -53,7 +59,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
+                SizedBox(
+                  height: 300,
                   child: BarChartAnalytics(salesData: sales!),
                 ),
               ],

@@ -1,0 +1,131 @@
+import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/services/admin_services.dart';
+import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';
+import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+class AdminOrdersScreen extends StatefulWidget {
+  static const String routeName = '/admin-orders';
+  const AdminOrdersScreen({super.key});
+
+  @override
+  State<AdminOrdersScreen> createState() => _AdminOrdersScreenState();
+}
+
+class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
+  List<Order>? orders;
+  Map<String, String> usersMap = {};
+  Map<String, String> sellersMap = {};
+  Map<String, String> sellersPhoneMap = {};
+  final AdminServices adminServices = AdminServices();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  void fetchData() async {
+    orders = await adminServices.fetchAllOrders(context);
+    List<User> users = await adminServices.fetchUsers(context);
+    List<User> sellers = await adminServices.fetchSellers(context);
+    usersMap = {for (var user in users) user.id: user.name};
+    sellersMap = {for (var seller in sellers) seller.id: seller.name};
+    sellersPhoneMap = {for (var seller in sellers) seller.id: seller.phoneNumber};
+    setState(() {});
+  }
+
+  void changeOrderStatus(Order order, int status) async {
+    adminServices.changeOrderStatus(context: context, id: order.id!, status: status);
+    fetchData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: AppBar(
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: GlobalVariables.appBarGradient,
+            ),
+          ),
+          title: const Text(
+            'All Orders',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+      body: orders == null
+          ? const Center(child: CircularProgressIndicator())
+          : orders!.isEmpty
+              ? const Center(child: Text('No orders found'))
+              : ListView.builder(
+                  itemCount: orders!.length,
+                  itemBuilder: (context, index) {
+                    final order = orders![index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      child: ListTile(
+                        title: Text('Order ID: ${order.id}'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Buyer: ${usersMap[order.userId] ?? 'Unknown'}'),
+                            Text('Vendor(s): ${getVendorNames(order)}'),
+                            Text('Total: \$${order.totalPrice}'),
+                            Text('Status: ${getStatusText(order.status)}'),
+                            Text('Ordered At: ${DateFormat.yMMMd().format(DateTime.fromMillisecondsSinceEpoch(order.orderedAt))}'),
+                          ],
+                        ),
+                        trailing: PopupMenuButton<int>(
+                          onSelected: (status) => changeOrderStatus(order, status),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(value: 0, child: Text('Pending')),
+                            const PopupMenuItem(value: 1, child: Text('Shipped')),
+                            const PopupMenuItem(value: 2, child: Text('Out for Delivery')),
+                            const PopupMenuItem(value: 3, child: Text('Delivered')),
+                            const PopupMenuItem(value: 4, child: Text('Cancelled')),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+    );
+  }
+
+  String getVendorNames(Order order) {
+    Set<String> sellerIds = {};
+    for (var product in order.products) {
+      if (product.sellerId.isNotEmpty) {
+        sellerIds.add(product.sellerId);
+      }
+    }
+    List<String> names = sellerIds.map((id) => sellersMap[id] ?? 'Unknown').toList();
+    List<String> phones = sellerIds.map((id) => sellersPhoneMap[id] ?? 'N/A').toList();
+    return '${names.join(', ')} (${phones.join(', ')})';
+  }
+
+  String getStatusText(int status) {
+    switch (status) {
+      case 0:
+        return 'Pending';
+      case 1:
+        return 'Shipped';
+      case 2:
+        return 'Out for Delivery';
+      case 3:
+        return 'Delivered';
+      case 4:
+        return 'Cancelled';
+      default:
+        return 'Unknown';
+    }
+  }
+}

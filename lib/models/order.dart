@@ -9,8 +9,12 @@ class Order {
   final String userId;
   final int orderedAt;
   final int status;
+  final bool cancelled;
   final double totalPrice;
   final String phoneNumber;
+  final String paymentMethod;
+  final String paymentStatus;
+  final Map<String, dynamic> paymentDetails;
   Order({
     required this.id,
     required this.products,
@@ -19,8 +23,12 @@ class Order {
     required this.userId,
     required this.orderedAt,
     required this.status,
+    required this.cancelled,
     required this.totalPrice,
     required this.phoneNumber,
+    required this.paymentMethod,
+    required this.paymentStatus,
+    this.paymentDetails = const {},
   });
 
   Map<String, dynamic> toMap() {
@@ -32,27 +40,43 @@ class Order {
       'userId': userId,
       'orderedAt': orderedAt,
       'status': status,
+      'cancelled': cancelled,
       'totalPrice': totalPrice,
       'phoneNumber': phoneNumber,
+      'paymentMethod': paymentMethod,
+      'paymentStatus': paymentStatus,
+      'paymentDetails': paymentDetails,
     };
   }
 
   factory Order.fromMap(Map<String, dynamic> map) {
+    // Handle products array structure from backend
+    List<Product> productsList = [];
+    List<int> quantityList = [];
+
+    if (map['products'] != null) {
+      for (var item in map['products']) {
+        if (item['product'] != null) {
+          productsList.add(Product.fromMap(item['product']));
+          quantityList.add(item['quantity'] ?? 0);
+        }
+      }
+    }
+
     return Order(
       id: map['_id'] ?? '',
-      products: List<Product>.from(
-          map['products']?.map((x) => Product.fromMap(x['product']))),
-      quantity: List<int>.from(
-        map['products']?.map(
-          (x) => x['quantity'],
-        ),
-      ),
+      products: productsList,
+      quantity: quantityList,
       address: map['address'] ?? '',
       userId: map['userId'] ?? '',
       orderedAt: map['orderedAt']?.toInt() ?? 0,
       status: map['status']?.toInt() ?? 0,
+      cancelled: map['cancelled'] ?? false,
       totalPrice: map['totalPrice']?.toDouble() ?? 0.0,
       phoneNumber: map['phoneNumber'] ?? '',
+      paymentMethod: map['paymentMethod'] ?? 'COD',
+      paymentStatus: map['paymentStatus'] ?? 'pending',
+      paymentDetails: Map<String, dynamic>.from(map['paymentDetails'] ?? {}),
     );
   }
 

@@ -1,7 +1,10 @@
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_button.dart';
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_textfield.dart';
+import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 class UserRegisterScreen extends StatefulWidget {
   static const String routeName = '/user-register-screen';
@@ -19,6 +22,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   @override
   void dispose() {
@@ -27,16 +31,36 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _nameController.dispose();
+    _phoneController.dispose();
   }
 
-  void signUpUser() {
+  void signUpUser() async {
     if (_signUpFormKey.currentState!.validate()) {
+      // Get current location
+      Position? position = await getCurrentLocation();
+      if (position == null) {
+        showSnackBar(context, 'Unable to get location. Please enable location services.');
+        return;
+      }
       authService.signUpUser(
         context: context,
         email: _emailController.text,
         password: _passwordController.text,
         name: _nameController.text,
         role: 'user',
+        latitude: position.latitude,
+        longitude: position.longitude,
+        phone: _phoneController.text,
+        onSuccess: (email, userId) {
+          Navigator.pushNamed(
+            context,
+            '/user-email-verification-screen',
+            arguments: {
+              'email': email,
+              'role': 'user',
+            },
+          );
+        },
       );
     }
   }
@@ -45,7 +69,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create User Account'),
+        title: const Text('Create Buyer Account'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -76,10 +100,37 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                 ),
                 const SizedBox(height: 15),
                 CustomTextField(
+                  textController: _phoneController,
+                  hintText: 'Phone Number',
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 15),
+                CustomTextField(
                   textController: _passwordController,
                   hintText: 'Password',
                   isPass: true,
                   keyboardType: TextInputType.text,
+                  validator: (val) {
+                    if (val == null || val.isEmpty) {
+                      return 'Please enter a password';
+                    }
+                    if (val.length < 8) {
+                      return 'Password must be at least 8 characters';
+                    }
+                    if (!val.contains(RegExp(r'[A-Z]'))) {
+                      return 'Must contain an uppercase letter';
+                    }
+                    if (!val.contains(RegExp(r'[a-z]'))) {
+                      return 'Must contain a lowercase letter';
+                    }
+                    if (!val.contains(RegExp(r'[0-9]'))) {
+                      return 'Must contain a number';
+                    }
+                    if (!val.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+                      return 'Must contain a special character';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 15),
                 CustomTextField(
@@ -88,6 +139,9 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                   isPass: true,
                   keyboardType: TextInputType.text,
                   validator: (val) {
+                    if (val == null || val.isEmpty) {
+                      return 'Please confirm your password';
+                    }
                     if (val != _passwordController.text) {
                       return 'Passwords do not match!';
                     }
@@ -103,7 +157,8 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                     const Text("Already have an account? "),
                     InkWell(
                       onTap: () {
-                        Navigator.pop(context);
+                        Navigator.pushNamed(context, LoginScreen.routeName,
+                            arguments: 'user');
                       },
                       child: Text(
                         'Log In',

@@ -1,8 +1,10 @@
+import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/orders_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/seller_registration_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/widgets/account_button.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/address/screens/set_address.dart';
-import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/sellers_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +22,7 @@ class TopButton extends StatelessWidget {
           children: [
             AccountButton(
               text: 'Your Orders',
-              onTap: () {},
+              onTap: () => Navigator.pushNamed(context, OrdersScreen.routeName),
             ),
             AccountButton(
               text: (user.type == 'seller') ? 'My Shop' : 'Turn Seller',
@@ -46,7 +48,23 @@ class TopButton extends StatelessWidget {
           children: [
             AccountButton(
               text: 'Log Out',
-              onTap: () => AccountServices().logOut(context),
+              onTap: () {
+                String logoutRedirectRouteName = LoginSelectionScreen.routeName;
+                String? role;
+
+                if (user.type == 'seller') {
+                  logoutRedirectRouteName = LoginScreen.routeName;
+                  role = 'seller';
+                } else if (user.type == 'admin') {
+                  logoutRedirectRouteName = LoginScreen.routeName;
+                  role = 'admin';
+                }
+                AccountServices().logOut(
+                  context,
+                  logoutRedirectRouteName: logoutRedirectRouteName,
+                  role: role,
+                );
+              },
             ),
             AccountButton(
               text: 'Set home address',

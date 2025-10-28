@@ -161,10 +161,11 @@ class _CartScreenState extends State<CartScreen> {
                     child: CustomButton(
                       text: "Start Shopping",
                       textColor: Colors.black,
-                      function: () {
-                        Navigator.pushReplacementNamed(
-                            context, BottomBar.routeName);
-                      },
+                      function: () => Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        BottomBar.routeName,
+                        (route) => false,
+                      ),
                       color: Colors.yellow[600],
                     ),
                   ),
@@ -236,7 +237,7 @@ class _CartScreenState extends State<CartScreen> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: CustomButton(
-                      text: "Proceed to Buy (${_selectedItems.length} items)",
+                      text: "Proceed to Buy (Ksh{_selectedItems.length} items)",
                       function: _selectedItems.isEmpty
                           ? null
                           : () => navigateToAddressScreen(selectedTotal),

@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
 void httpErrorHandle({
@@ -10,18 +9,21 @@ void httpErrorHandle({
   required BuildContext context,
   required VoidCallback onSuccess,
 }) {
-  switch (response.statusCode) {
-    case 200:
-      onSuccess();    
-      break;
-    case 400:
-      showSnackBar(context, jsonDecode(response.body)['msg']);
-      break;
-    case 500:
-      showSnackBar(context, jsonDecode(response.body)['error']);
-      break;
-    default:
-      showSnackBar(context, response.body);
-      break;
+  if (response.statusCode == 200) {
+    onSuccess();
+    return;
+  }
+
+  String message = 'An unknown error occurred.';
+  try {
+    final body = jsonDecode(response.body);
+    message = body['msg'] ?? body['error'] ?? 'Error: ${response.statusCode}';
+  } catch (e) {
+    // If the body is not valid JSON or doesn't contain a message, use the reason phrase.
+    message = response.reasonPhrase ?? 'Error: ${response.statusCode}';
+  }
+
+  if (context.mounted) {
+    showSnackBar(context, message);
   }
 }

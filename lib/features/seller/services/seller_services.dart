@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloudinary_public/cloudinary_public.dart';
+import 'package:dio/dio.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/error_handling.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
@@ -10,6 +12,7 @@ import 'package:ecommerce_app_fluterr_nodejs/features/seller/models/shop_stats.d
 import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/product.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
+import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,43 +25,45 @@ class SellerServices {
     required String shopName,
     required String shopDescription,
     required String address,
-    required dynamic avatar,
+    required Uint8List avatar,
+    bool popOnSuccess = false,
+    required String userId,
+    required double latitude,
+    required double longitude,
+    String? phone,
   }) async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
     String status = '';
     try {
       // Upload avatar to cloudinary
       final cloudinary = CloudinaryPublic('dvgeq2l6e', 'xuvwiao4');
       CloudinaryResponse avatarRes;
 
-      if (kIsWeb) {
-        // Xử lý cho web platform
-        avatarRes = await cloudinary.uploadFile(
-          CloudinaryFile.fromBytesData(
-            avatar, // Uint8List data
-            identifier: 'shop_avatar_${DateTime.now().millisecondsSinceEpoch}',
-            folder: shopName,
-            resourceType: CloudinaryResourceType.Image,
-          ),
-        );
-      } else {
-        // Xử lý cho mobile platform
-        avatarRes = await cloudinary.uploadFile(
-          CloudinaryFile.fromFile((avatar as File).path, folder: shopName),
-        );
-      }
+      // Create a mutable copy of the avatar bytes
+      Uint8List avatarBytes = Uint8List.fromList(avatar);
+
+      avatarRes = await cloudinary.uploadFile(
+        CloudinaryFile.fromBytesData(
+          avatarBytes, // Uint8List data
+          identifier: 'shop_avatar_${DateTime.now().millisecondsSinceEpoch}',
+          folder: shopName,
+          resourceType: CloudinaryResourceType.Image,
+        ),
+      );
 
       http.Response res = await http.post(
         Uri.parse('$uri/api/register-seller'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
-          'x-auth-token': userProvider.user.token,
         },
         body: jsonEncode({
           'shopName': shopName,
           'shopDescription': shopDescription,
+          'userId': userId,
           'address': address,
           'avatarUrl': avatarRes.secureUrl,
+          'latitude': latitude,
+          'longitude': longitude,
+          'phone': phone,
         }),
       );
 
@@ -71,12 +76,82 @@ class SellerServices {
             context,
             'Seller registration request sent successfully!',
           );
+          if (popOnSuccess) {
+            Navigator.pop(context);
+          }
         },
       );
     } catch (e) {
       showSnackBar(context, e.toString());
     }
     return status;
+  }
+
+  Future<void> requestSellerStatus({
+    required BuildContext context,
+    required String shopName,
+    required String shopDescription,
+    required String address,
+    required Uint8List avatar,
+    required String userId,
+    required double latitude,
+    required double longitude,
+    required String phone,
+  }) async {
+    try {
+      // Upload avatar to cloudinary
+      final cloudinary = CloudinaryPublic('dvgeq2l6e', 'xuvwiao4');
+      CloudinaryResponse avatarRes;
+
+      // Create a mutable copy of the avatar bytes
+      Uint8List avatarBytes = Uint8List.fromList(avatar);
+
+      avatarRes = await cloudinary.uploadFile(
+        CloudinaryFile.fromBytesData(
+          avatarBytes, // Uint8List data
+          identifier: 'shop_avatar_${DateTime.now().millisecondsSinceEpoch}',
+          folder: shopName,
+          resourceType: CloudinaryResourceType.Image,
+        ),
+      );
+
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+      http.Response res = await http.post(
+        Uri.parse('$uri/api/register-seller-auth'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+        body: jsonEncode({
+          'shopName': shopName,
+          'shopDescription': shopDescription,
+          'address': address,
+          'avatarUrl': avatarRes.secureUrl,
+          'latitude': latitude,
+          'longitude': longitude,
+          'phone': phone,
+        }),
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          showSnackBar(
+            context,
+            'Seller request submitted successfully! You are now a seller.',
+          );
+          // Update user type in provider
+          userProvider.setUserFromModel(
+            userProvider.user.copyWith(type: 'seller'),
+          );
+          Navigator.pop(context);
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
   }
 
   Future<String> checkRequestStatus(BuildContext context) async {
@@ -111,37 +186,47 @@ class SellerServices {
     required double price,
     required int quantity,
     required String category,
-    required List<dynamic> images,
+    required List<Uint8List> images,
     required String sellerId,
   }) async {
     bool isSuccess = false;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
+      debugPrint('Starting product upload process...');
+      debugPrint('Images to upload: ${images.length}');
       // ko luu anh tren mongodb vi dung luong kha it(shared clutter),luu anh tren cloudinary
       final cloudinary = CloudinaryPublic('dvgeq2l6e', 'xuvwiao4');
       List<String> imageUrls = [];
 
       for (int i = 0; i < images.length; i++) {
         CloudinaryResponse res;
-        if (kIsWeb) {
-          // Xử lý cho web platform
+        try {
+          debugPrint('Uploading image $i to Cloudinary...');
+          // Sanitize folder name to avoid issues with special characters
+          String sanitizedFolder = name.replaceAll(RegExp(r'[^\w\s-]'), '').replaceAll(' ', '_');
           res = await cloudinary.uploadFile(
             CloudinaryFile.fromBytesData(
               images[i], // Uint8List data
               identifier:
                   'product_image_${DateTime.now().millisecondsSinceEpoch}_$i',
-              folder: name,
+              folder: sanitizedFolder,
               resourceType: CloudinaryResourceType.Image,
             ),
           );
-        } else {
-          // Xử lý cho mobile platform
-          res = await cloudinary.uploadFile(
-            CloudinaryFile.fromFile((images[i] as File).path, folder: name),
-          );
+          debugPrint('Image $i uploaded successfully: ${res.secureUrl}');
+          imageUrls.add(res.secureUrl);
+        } catch (e) {
+          debugPrint('Failed to upload image $i: $e');
+          // Add more detailed error logging
+          if (e is DioException && e.response != null) {
+            debugPrint('Response status: ${e.response?.statusCode}');
+            debugPrint('Response data: ${e.response?.data}');
+          }
+          showSnackBar(context, 'Failed to upload image $i: $e');
+          return false;
         }
-        imageUrls.add(res.secureUrl);
       }
+      debugPrint('All images uploaded. Creating product...');
       Product product = Product(
         name: name,
         description: description,
@@ -151,6 +236,7 @@ class SellerServices {
         price: price,
         sellerId: sellerId,
       );
+      debugPrint('Sending product to server...');
       http.Response res = await http.post(
         Uri.parse('$uri/seller/add-product'),
         headers: {
@@ -159,14 +245,18 @@ class SellerServices {
         },
         body: product.toJson(),
       );
+      debugPrint('Server response status: ${res.statusCode}');
+      debugPrint('Server response body: ${res.body}');
       httpErrorHandle(
         response: res,
         context: context,
         onSuccess: () {
           isSuccess = true;
+          debugPrint('Product added successfully');
         },
       );
     } catch (e) {
+      debugPrint('Error in sellProduct: $e');
       showSnackBar(context, e.toString());
     }
     return isSuccess;
@@ -188,13 +278,10 @@ class SellerServices {
         response: res,
         context: context,
         onSuccess: () {
-          for (int i = 0; i < jsonDecode(res.body).length; i++) {
+          final List<dynamic> productData = jsonDecode(res.body);
+          for (final item in productData) {
             productList.add(
-              Product.fromJson(
-                jsonEncode(
-                  jsonDecode(res.body)[i],
-                ),
-              ),
+              Product.fromMap(item as Map<String, dynamic>),
             );
           }
         },
@@ -249,13 +336,10 @@ class SellerServices {
         response: res,
         context: context,
         onSuccess: () {
-          for (int i = 0; i < jsonDecode(res.body).length; i++) {
+          final List<dynamic> orderData = jsonDecode(res.body);
+          for (final item in orderData) {
             orderList.add(
-              Order.fromJson(
-                jsonEncode(
-                  jsonDecode(res.body)[i],
-                ),
-              ),
+              Order.fromMap(item as Map<String, dynamic>),
             );
           }
         },
@@ -283,6 +367,35 @@ class SellerServices {
         body: jsonEncode({
           'id': order.id,
           'status': status,
+        }),
+      );
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: onSuccess,
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+  }
+
+  void updatePaymentStatus({
+    required BuildContext context,
+    required String paymentStatus,
+    required Order order,
+    required VoidCallback onSuccess,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    try {
+      http.Response res = await http.post(
+        Uri.parse('$uri/seller/update-payment-status'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+        body: jsonEncode({
+          'id': order.id,
+          'paymentStatus': paymentStatus,
         }),
       );
       httpErrorHandle(
@@ -337,7 +450,7 @@ class SellerServices {
     required double price,
     required int quantity,
     required String category,
-    required List<dynamic> newImages,
+    required List<Uint8List> newImages,
   }) async {
     bool isSuccess = false;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -349,24 +462,15 @@ class SellerServices {
 
         for (int i = 0; i < newImages.length; i++) {
           CloudinaryResponse res;
-          if (kIsWeb) {
-            // Xử lý cho web platform
-            res = await cloudinary.uploadFile(
-              CloudinaryFile.fromBytesData(
-                newImages[i],
-                identifier:
-                    'product_${product.name}_${DateTime.now().millisecondsSinceEpoch}_$i',
-                folder: name,
-                resourceType: CloudinaryResourceType.Image,
-              ),
-            );
-          } else {
-            // Xử lý cho mobile platform
-            res = await cloudinary.uploadFile(
-              CloudinaryFile.fromFile((newImages[i] as File).path,
-                  folder: name),
-            );
-          }
+          res = await cloudinary.uploadFile(
+            CloudinaryFile.fromBytesData(
+              newImages[i],
+              identifier:
+                  'product_${product.name}_${DateTime.now().millisecondsSinceEpoch}_$i',
+              folder: name,
+              resourceType: CloudinaryResourceType.Image,
+            ),
+          );
           newImageUrls.add(res.secureUrl);
         }
       }
@@ -422,8 +526,9 @@ class SellerServices {
         onSuccess: () {
           var data = jsonDecode(res.body);
           shopOwner = User.fromMap(data['shopOwner']);
-          products = (data['products'] as List)
-              .map((product) => Product.fromJson(jsonEncode(product)))
+          products = (data['products'] as List<dynamic>)
+              .map(
+                  (product) => Product.fromMap(product as Map<String, dynamic>))
               .toList();
         },
       );
@@ -590,5 +695,33 @@ class SellerServices {
       showSnackBar(context, e.toString());
     }
     return sellerList;
+  }
+
+  // get all the products for buyers
+  Future<List<Product>> fetchAllProductsForBuyers(BuildContext context) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<Product> productList = [];
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/api/products'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          final List<dynamic> productData = jsonDecode(res.body);
+          for (final item in productData) {
+            productList.add(Product.fromMap(item as Map<String, dynamic>));
+          }
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return productList;
   }
 }

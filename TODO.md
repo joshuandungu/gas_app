@@ -1,0 +1,10 @@
+- [x] Fix "Bad state: No element" error in chat_list_screen.dart by adding null checks and safe access for participants list
+- [x] Update _buildConversationsList to handle empty or invalid participants
+- [x] Update _navigateToExistingChat to handle cases where other user is not found
+- [x] Update _navigateToNewChat to handle missing receiver in participants
+- [x] Test the chat screen navigation after fixes
+- [x] Update the admin dashboard UI to display all vendors
+- [x] Show revenue generated from completed orders for each vendor
+- [x] Ensure data is fetched from backend APIs
+- [x] Implement proper UI components (list/table) for vendor revenue display
+- [x] Test the updated dashboard functionality

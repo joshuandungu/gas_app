@@ -45,7 +45,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       .toList();
 
   late String category;
-  List<dynamic> images = [];
+  List<Uint8List> images = [];
 
   @override
   void initState() {
@@ -55,16 +55,21 @@ class _AddProductScreenState extends State<AddProductScreen> {
   }
 
   void sellProduct() async {
+    debugPrint('sellProduct called');
     if (images.isEmpty) {
+      debugPrint('No images selected');
       showSnackBar(
           context, 'Please select at least one image for the product.');
       return;
     }
+    debugPrint('Images selected: ${images.length}');
     if (_addProductFormKey.currentState!.validate()) {
+      debugPrint('Form validated');
       setState(() {
         _isLoading = true;
       });
       final userProvider = Provider.of<UserProvider>(context, listen: false);
+      debugPrint('User ID: ${userProvider.user.id}');
       final isSuccess = await sellerServices.sellProduct(
         context: context,
         name: productNameController.text,
@@ -83,14 +88,21 @@ class _AddProductScreenState extends State<AddProductScreen> {
       }
 
       if (isSuccess) {
+        debugPrint('Product added successfully');
         showSnackBar(context, 'Product added successfully!');
         Navigator.pop(context);
+      } else {
+        debugPrint('Product addition failed');
       }
+    } else {
+      debugPrint('Form validation failed');
     }
   }
 
   void selectImages() async {
+    debugPrint('Selecting images...');
     var res = await pickImages();
+    debugPrint('Selected ${res.length} images');
     setState(() {
       images = res;
     });
@@ -128,11 +140,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         items: images.map(
                           (i) {
                             return Builder(
-                              builder: (BuildContext context) => kIsWeb
-                                  ? Image.memory(i as Uint8List,
-                                      fit: BoxFit.cover, height: 200)
-                                  : Image.file(i as File,
-                                      fit: BoxFit.cover, height: 200),
+                              builder: (BuildContext context) => Image.memory(
+                                i,
+                                fit: BoxFit.cover,
+                                height: 200,
+                              ),
                             );
                           },
                         ).toList(),

@@ -1,8 +1,10 @@
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_button.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/order_details/services/order_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/services/seller_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/search/screens/search_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/order.dart';
+import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +22,7 @@ class OrderDetailsScreens extends StatefulWidget {
 class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
   int currentStep = 0;
   final SellerServices _sellerServices = SellerServices();
+  final OrderServices _orderServices = OrderServices();
   void navigateToSearchScreen(String query) {
     Navigator.pushNamed(context, SearchScreen.routeName, arguments: query);
   }
@@ -45,6 +48,148 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
         },
       );
     }
+  }
+
+  // Change order status to specific value
+  void changeOrderStatusTo(int status) {
+    _sellerServices.changeOrderStatus(
+      context: context,
+      status: status,
+      order: widget.order,
+      onSuccess: () {
+        setState(() {
+          currentStep = status;
+        });
+      },
+    );
+  }
+
+  void cancelOrder() {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    if (user.type == 'seller') {
+      _orderServices.cancelOrderSeller(
+        context: context,
+        orderId: widget.order.id,
+        onSuccess: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Order cancelled successfully')),
+          );
+          Navigator.pop(context); // Go back to refresh
+        },
+      );
+    } else {
+      _orderServices.cancelOrder(
+        context: context,
+        orderId: widget.order.id,
+        onSuccess: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Order cancelled successfully')),
+          );
+          Navigator.pop(context); // Go back to refresh
+        },
+      );
+    }
+  }
+
+  void deleteOrder() {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    if (user.type == 'seller') {
+      _orderServices.deleteOrderSeller(
+        context: context,
+        orderId: widget.order.id,
+        onSuccess: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Order deleted successfully')),
+          );
+          Navigator.pop(context);
+        },
+      );
+    } else {
+      _orderServices.deleteOrder(
+        context: context,
+        orderId: widget.order.id,
+        onSuccess: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Order deleted successfully')),
+          );
+          Navigator.pop(context);
+        },
+      );
+    }
+  }
+
+  void _showPaymentStatusDialog(BuildContext context) {
+    String selectedStatus = widget.order.paymentStatus;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Update Payment Status'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Select new payment status:'),
+                  const SizedBox(height: 16),
+                  DropdownButton<String>(
+                    value: selectedStatus,
+                    isExpanded: true,
+                    items: const [
+                      DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                      DropdownMenuItem(value: 'paid', child: Text('Paid')),
+                      DropdownMenuItem(value: 'failed', child: Text('Failed')),
+                      DropdownMenuItem(value: 'refunded', child: Text('Refunded')),
+                    ],
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedStatus = newValue;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _updatePaymentStatus(selectedStatus);
+              },
+              child: const Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _updatePaymentStatus(String newStatus) {
+    _sellerServices.updatePaymentStatus(
+      context: context,
+      paymentStatus: newStatus,
+      order: widget.order,
+      onSuccess: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment status updated to $newStatus')),
+        );
+        // Refresh the order details
+        setState(() {});
+      },
+    );
+  }
+
+  bool _hasSellerProducts(User user) {
+    if (user.type != 'seller') return false;
+    return widget.order.products.any((product) => product.sellerId == user.id);
   }
 
   @override
@@ -168,7 +313,7 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                     const SizedBox(height: 8),
                     _buildOrderInfoRow(
                       'Order Total:',
-                      '\$${widget.order.totalPrice.toStringAsFixed(2)}',
+                      'Ksh ${widget.order.totalPrice.toStringAsFixed(2)}',
                       valueColor: Colors.green,
                     ),
                     const SizedBox(height: 8),
@@ -177,6 +322,11 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                     const SizedBox(height: 8),
                     _buildOrderInfoRow(
                         'Phone Number:', widget.order.phoneNumber),
+                    const SizedBox(height: 8),
+                    _buildOrderInfoRow(
+                        'Payment Method:', widget.order.paymentMethod),
+                    const SizedBox(height: 8),
+                    _buildPaymentStatusRow('Payment Status:', widget.order.paymentStatus),
                   ],
                 ),
               ),
@@ -245,10 +395,42 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Price: \$${widget.order.products[index].price}',
+                                'Price: Ksh ${widget.order.products[index].price}',
                                 style: const TextStyle(
                                   color: Colors.green,
                                   fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Shop Name: ${widget.order.products[index].shopName ?? 'N/A'}',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Owner: ${widget.order.products[index].sellerName ?? 'N/A'}',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Email: ${widget.order.products[index].sellerEmail ?? 'N/A'}',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Phone: ${widget.order.products[index].sellerPhone ?? 'N/A'}',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
@@ -290,12 +472,37 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                     ),
                   ),
                   child: Stepper(
-                    currentStep: currentStep,
+                    currentStep: widget.order.cancelled ? 4 : currentStep,
                     controlsBuilder: (context, details) {
-                      if (user.type == 'seller' && currentStep < 3) {
-                        return CustomButton(
-                          text: 'Done',
-                          function: () => changeOrderStatus(),
+                      if (user.type == 'seller' && !widget.order.cancelled && _hasSellerProducts(user)) {
+                        return PopupMenuButton<int>(
+                          onSelected: (status) => changeOrderStatusTo(status),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(value: 0, child: Text('Pending')),
+                            const PopupMenuItem(value: 1, child: Text('Shipped')),
+                            const PopupMenuItem(value: 2, child: Text('Out for Delivery')),
+                            const PopupMenuItem(value: 3, child: Text('Delivered')),
+                          ],
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: GlobalVariables.secondaryColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Change Status',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
                         );
                       }
                       return const SizedBox();
@@ -304,47 +511,146 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
                       Step(
                         title: const Text('Pending'),
                         content: const Text(
-                          'Your order is yet to be delivered',
+                          'Your order is yet to be shipped',
                         ),
                         isActive: currentStep >= 0,
-                        state: currentStep > 0
-                            ? StepState.complete
-                            : StepState.indexed,
+                        state: widget.order.cancelled
+                            ? StepState.error
+                            : currentStep > 0
+                                ? StepState.complete
+                                : StepState.indexed,
                       ),
                       Step(
-                        title: const Text('Completed'),
+                        title: const Text('Shipped'),
                         content: const Text(
-                          'Your order has been delivered, you are yet to sign.',
+                          'Your order has been shipped and is on the way.',
                         ),
                         isActive: currentStep >= 1,
-                        state: currentStep > 1
-                            ? StepState.complete
-                            : StepState.indexed,
+                        state: widget.order.cancelled
+                            ? StepState.error
+                            : currentStep > 1
+                                ? StepState.complete
+                                : StepState.indexed,
                       ),
                       Step(
-                        title: const Text('Received'),
+                        title: const Text('Out for Delivery'),
                         content: const Text(
-                          'Your order has been delivered and signed by you.',
+                          'Your order is out for delivery.',
                         ),
                         isActive: currentStep >= 2,
-                        state: currentStep > 2
-                            ? StepState.complete
-                            : StepState.indexed,
+                        state: widget.order.cancelled
+                            ? StepState.error
+                            : currentStep > 2
+                                ? StepState.complete
+                                : StepState.indexed,
                       ),
                       Step(
                         title: const Text('Delivered'),
                         content: const Text(
-                          'Your order has been delivered and signed by you!',
+                          'Your order has been delivered successfully!',
                         ),
                         isActive: currentStep >= 3,
-                        state: currentStep >= 3
-                            ? StepState.complete
-                            : StepState.indexed,
+                        state: widget.order.cancelled
+                            ? StepState.error
+                            : currentStep >= 3
+                                ? StepState.complete
+                                : StepState.indexed,
                       ),
+                      if (widget.order.cancelled)
+                        Step(
+                          title: const Text('Cancelled'),
+                          content: const Text(
+                            'This order has been cancelled.',
+                          ),
+                          isActive: true,
+                          state: StepState.error,
+                        ),
                     ],
                   ),
                 ),
               ),
+              const SizedBox(height: 24),
+              // Action Buttons
+              if (!widget.order.cancelled && (user.type != 'seller' || _hasSellerProducts(user)))
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Actions',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (!widget.order.cancelled && currentStep < 2)
+                        CustomButton(
+                          text: 'Cancel Order',
+                          function: cancelOrder,
+                          color: Colors.red,
+                        ),
+                      if (user.type == 'seller' && !widget.order.cancelled && _hasSellerProducts(user))
+                        Column(
+                          children: [
+                            const SizedBox(height: 12),
+                            CustomButton(
+                              text: 'Update Payment Status',
+                              function: () => _showPaymentStatusDialog(context),
+                              color: GlobalVariables.secondaryColor,
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              if (widget.order.cancelled && user.type != 'seller')
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Actions',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      CustomButton(
+                        text: 'Delete Order',
+                        function: deleteOrder,
+                        color: Colors.red,
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
@@ -376,6 +682,68 @@ class _OrderDetailsScreensState extends State<OrderDetailsScreens> {
             ),
             textAlign: TextAlign.right, // Căn phải cho value
             softWrap: true, // Cho phép text wrap xuống dòng
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentStatusRow(String label, String status) {
+    Color statusColor;
+    IconData statusIcon;
+
+    switch (status.toLowerCase()) {
+      case 'paid':
+        statusColor = Colors.green;
+        statusIcon = Icons.check_circle;
+        break;
+      case 'pending':
+        statusColor = Colors.orange;
+        statusIcon = Icons.hourglass_empty;
+        break;
+      case 'failed':
+        statusColor = Colors.red;
+        statusIcon = Icons.error;
+        break;
+      case 'initiated':
+        statusColor = Colors.blue;
+        statusIcon = Icons.payment;
+        break;
+      default:
+        statusColor = Colors.grey;
+        statusIcon = Icons.help;
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Icon(
+                statusIcon,
+                color: statusColor,
+                size: 16,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                status.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: statusColor,
+                ),
+              ),
+            ],
           ),
         ),
       ],

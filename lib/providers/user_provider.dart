@@ -9,10 +9,13 @@ class UserProvider extends ChangeNotifier {
     password: '',
     address: '',
     type: '',
+    status: '',
     token: '',
     cart: [],
     followers: [],
     following: [],
+    latitude: 0.0,
+    longitude: 0.0,
   );
 
   User get user => _user;
@@ -27,39 +30,37 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Thêm seller vào danh sách following
+  // Method to follow the seller
   void followSeller(String sellerId) {
     if (!_user.following.contains(sellerId)) {
       _user = _user.copyWith(
         following: [..._user.following, sellerId],
-        phoneNumber: null,
       );
       notifyListeners();
     }
   }
 
-  // Xóa seller khỏi danh sách following
+  // Method to unfollow a seller
   void unfollowSeller(String sellerId) {
     _user = _user.copyWith(
       following: _user.following.where((id) => id != sellerId).toList(),
-      phoneNumber: null,
     );
     notifyListeners();
   }
 
-  // Cập nhật toàn bộ danh sách following
+  // Method to update a list of followers folling a seller
   void updateFollowing(List<String> following) {
-    _user = _user.copyWith(following: following, phoneNumber: null);
+    _user = _user.copyWith(following: following);
     notifyListeners();
   }
 
-  // Cập nhật toàn bộ danh sách followers
+  
   void updateFollowers(List<String> followers) {
-    _user = _user.copyWith(followers: followers, phoneNumber: null);
+    _user = _user.copyWith(followers: followers);
     notifyListeners();
   }
 
-  // Kiểm tra xem user hiện tại có đang follow một seller không
+  
   bool isFollowing(String sellerId) {
     return _user.following.contains(sellerId);
   }

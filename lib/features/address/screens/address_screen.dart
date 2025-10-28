@@ -66,30 +66,65 @@ class _AddressScreenState extends State<AddressScreen> {
             textController: flatBuildingController,
             hintText: 'Flat, House no, Building',
             keyboardType: TextInputType.text,
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please enter your Flat, House no, Building';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 10),
           CustomTextField(
             textController: areaController,
             hintText: 'Area, Street',
             keyboardType: TextInputType.text,
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please enter your Area, Street';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 10),
           CustomTextField(
             textController: pincodeController,
             hintText: 'District',
             keyboardType: TextInputType.text,
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please enter your District';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 10),
           CustomTextField(
             textController: cityController,
             hintText: 'Town/City',
             keyboardType: TextInputType.text,
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please enter your Town/City';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 10),
           CustomTextField(
             textController: phoneNumberController,
             hintText: 'Phone Number',
             keyboardType: TextInputType.phone,
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please enter your Phone Number';
+              }
+              // Basic phone number validation
+              final phoneRegex = RegExp(r'^\+?[0-9]{10,15}$');
+              if (!phoneRegex.hasMatch(val)) {
+                return 'Please enter a valid phone number';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 10),
         ],
@@ -160,6 +195,9 @@ class _AddressScreenState extends State<AddressScreen> {
   }
 
   void handleMpesaPayment(String address, double shippingFee) {
+    setState(() {
+      isLoading = true;
+    });
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -184,6 +222,11 @@ class _AddressScreenState extends State<AddressScreen> {
                     orderId: order.id,
                     phoneNumber: phoneNumber,
                     amount: order.totalPrice);
+                if (mounted) {
+                  setState(() {
+                    isLoading = false;
+                  });
+                }
               },
             );
           } else {
@@ -201,6 +244,11 @@ class _AddressScreenState extends State<AddressScreen> {
                     orderId: order.id,
                     phoneNumber: phoneNumber,
                     amount: order.totalPrice);
+                if (mounted) {
+                  setState(() {
+                    isLoading = false;
+                  });
+                }
               },
             );
           }
@@ -261,7 +309,7 @@ class _AddressScreenState extends State<AddressScreen> {
         addressToBeUsed =
             '${flatBuildingController.text}, ${areaController.text}, District ${pincodeController.text}, ${cityController.text}';
       } else {
-        showSnackBar(context, "Please enter all values in the address form!");
+        // The form validation will show specific error messages for each field
         return;
       }
     } else if (addressFromProvider.isNotEmpty) {
@@ -395,15 +443,24 @@ class _AddressScreenState extends State<AddressScreen> {
                 height: 48,
                 margin: const EdgeInsets.only(top: 15.0),
                 child: ElevatedButton(
-                  onPressed: () => payPressed(address, 'M-Pesa'),
+                  onPressed: isLoading ? null : () => payPressed(address, 'M-Pesa'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green, // M-Pesa color
                     shape: const StadiumBorder(),
                   ),
-                  child: const Text(
-                    'Pay with M-Pesa',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Pay with M-Pesa',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
                 ),
               ),
               const Padding(

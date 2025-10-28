@@ -1,4 +1,5 @@
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/account/screens/edit_profile_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/widgets/notifications_bottom_sheet.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/account/widgets/orders.dart';
@@ -152,6 +153,17 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           actions: [
             Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                onPressed: () => Navigator.pushNamed(context, EditProfileScreen.routeName),
+                icon: const Icon(
+                  Icons.edit,
+                  size: 28,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            Padding(
               padding: const EdgeInsets.only(right: 16),
               child: InkWell(
                 onTap: () => _showNotifications(context),
@@ -183,15 +195,6 @@ class _AccountScreenState extends State<AccountScreen> {
         children: [
           SizedBox(height: 15),
           TopButton(),
-          SizedBox(height: 20),
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text('Your Orders',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
-          ),
-          Divider(),
-
-          Expanded(child: Orders()),
         ],
       ),
     );

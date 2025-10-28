@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'package:ecommerce_app_fluterr_nodejs/constants/error_handling.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/home/services/location_filter_service.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/product.dart';
 import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
 import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
@@ -29,22 +31,62 @@ class HomeServices {
         context: context,
         onSuccess: () {
           var jsonData = jsonDecode(res.body) as List;
-          productList = jsonData.map((item) {
+          for (var item in jsonData) {
             // Flatten the nested sellerId object for easier use in the Product model
             if (item['sellerId'] != null && item['sellerId'] is Map) {
-              item['shopName'] = item['sellerId']['shopName']?.toString() ?? '';
-              item['shopAvatar'] =
-                  item['sellerId']['shopAvatar']?.toString() ?? '';
-              item['sellerId'] = item['sellerId']['_id']?.toString() ?? '';
+              final sellerData = item['sellerId'];
+              item['shopName'] = sellerData['shopName']?.toString() ?? '';
+              item['shopAvatar'] = sellerData['shopAvatar']?.toString() ?? '';
+              item['sellerId'] = sellerData['_id']?.toString() ?? '';
             }
-            return Product.fromMap(item);
-          }).toList();
+            productList.add(Product.fromMap(item));
+          }
         },
       );
     } catch (e) {
       showSnackBar(context, e.toString());
     }
     return productList;
+  }
+
+  Future<List<User>> fetchNearbyVendors({
+    required BuildContext context,
+    required double radiusInMeters,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<User> allVendors = [];
+    List<User> nearbyVendors = [];
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/api/sellers'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          for (var sellerData in jsonDecode(res.body)) {
+            allVendors.add(User.fromMap(sellerData));
+          }
+        },
+      );
+
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      LocationFilterService locationFilterService = LocationFilterService();
+      nearbyVendors = await locationFilterService.filterVendorsByLocation(
+          buyerPosition: position,
+          vendors: allVendors,
+          radiusInMeters: radiusInMeters);
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return nearbyVendors;
   }
 
   Future<List<Product>> fetchCategoryProducts({
@@ -59,6 +101,46 @@ class HomeServices {
     required BuildContext context,
   }) async {
     return _fetchProducts(context: context, url: '$uri/api/deal-of-day');
+  }
+
+  Future<List<Product>> fetchAllProducts({
+    required BuildContext context,
+    String? category,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<Product> productList = [];
+    try {
+      String url = '$uri/api/products';
+      if (category != null) {
+        url += '?category=$category';
+      }
+
+      http.Response res = await http.get(Uri.parse(url), headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'x-auth-token': userProvider.user.token,
+      });
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          var jsonData = jsonDecode(res.body) as List;
+          for (var item in jsonData) {
+            // Flatten the nested sellerId object for easier use in the Product model
+            if (item['sellerId'] != null && item['sellerId'] is Map) {
+              final sellerData = item['sellerId'];
+              item['shopName'] = sellerData['shopName']?.toString() ?? '';
+              item['shopAvatar'] = sellerData['shopAvatar']?.toString() ?? '';
+              item['sellerId'] = sellerData['_id']?.toString() ?? '';
+            }
+            productList.add(Product.fromMap(item));
+          }
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return productList;
   }
 
   Future<List<User>> fetchTopSellers(BuildContext context) async {
@@ -86,5 +168,76 @@ class HomeServices {
       showSnackBar(context, e.toString());
     }
     return sellers;
+  }
+
+  Future<List<User>> fetchTopSellersNearBy({
+    required BuildContext context,
+    required double radiusInMeters,
+  }) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<User> topSellers = [];
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/api/best-sellers'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          for (var sellerData in jsonDecode(res.body)) {
+            topSellers.add(User.fromMap(sellerData));
+          }
+        },
+      );
+
+      try {
+        Position position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high);
+
+        LocationFilterService locationFilterService = LocationFilterService();
+        topSellers = await locationFilterService.filterVendorsByLocation(
+            buyerPosition: position,
+            vendors: topSellers,
+            radiusInMeters: radiusInMeters);
+      } catch (locationError) {
+        // If location fails, return the top sellers without filtering
+        // No need to show error for location, just fallback
+      }
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return topSellers;
+  }
+
+  Future<List<User>> fetchAllUsers(BuildContext context) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<User> users = [];
+    try {
+      http.Response res = await http.get(
+        Uri.parse('$uri/api/users'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.token,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          for (var userData in jsonDecode(res.body)) {
+            users.add(User.fromMap(userData));
+          }
+        },
+      );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+    return users;
   }
 }

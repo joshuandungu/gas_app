@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
-  const ProductCard({super.key, required this.product});
+  final VoidCallback? onTap;
+  const ProductCard({super.key, required this.product, this.onTap});
 
   bool get isDiscounted {
     if (product.discount?.startDate == null ||
@@ -15,15 +16,17 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: LayoutBuilder(builder: (context, constraints) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: LayoutBuilder(builder: (context, constraints) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Image section with gradient overlay
             SizedBox(
               height: constraints.maxHeight * 0.55,
@@ -137,7 +140,7 @@ class ProductCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          '\$${product.finalPrice.toStringAsFixed(2)}',
+                          '\$ksh{product.finalPrice.toStringAsFixed(2)}',
                           style: const TextStyle(
                             color: Colors.red,
                             fontSize: 14,
@@ -148,7 +151,7 @@ class ProductCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              '\$${product.price.toStringAsFixed(2)}',
+                              '\$ksh{product.price.toStringAsFixed(2)}',
                               style: const TextStyle(
                                 decoration: TextDecoration.lineThrough,
                                 color: Colors.grey,
@@ -182,9 +185,10 @@ class ProductCard extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        );
-      }),
+            ],
+          );
+        }),
+      ),
     );
   }
 }

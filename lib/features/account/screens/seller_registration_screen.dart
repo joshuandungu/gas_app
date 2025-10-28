@@ -5,7 +5,10 @@ import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_button.dart';
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_textfield.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/services/seller_services.dart';
+import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:geolocator/geolocator.dart';
 // BorderType is provided by dotted_border package
 // BorderType is provided by dotted_border package
 // No need to import BorderType, use customPath for rounded rectangle
@@ -64,14 +67,26 @@ class _SellerRegistrationScreenState extends State<SellerRegistrationScreen> {
   void registerSeller() async {
     if (avatarImage == null) {
       showSnackBar(context, "Please pick image!");
+      return;
     }
     if (_registrationFormKey.currentState!.validate() && avatarImage != null) {
+      // Get current location
+      Position? position = await getCurrentLocation();
+      if (position == null) {
+        showSnackBar(context, 'Unable to get location. Please enable location services.');
+        return;
+      }
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
       String status = await sellerServices.registerSeller(
         context: context,
         shopName: _shopNameController.text,
         shopDescription: _shopDescriptionController.text,
         address: _addressController.text,
         avatar: avatarImage!,
+        userId: userProvider.user.id,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        popOnSuccess: true,
       );
       setState(() {
         requestStatus = status;
@@ -199,8 +214,10 @@ class _SellerRegistrationScreenState extends State<SellerRegistrationScreen> {
                       const SizedBox(height: 20),
                       CustomButton(
                         text: 'Send Request',
-                        function:
-                            requestStatus != 'pending' ? registerSeller : null,
+                        function: (requestStatus != 'pending' &&
+                                requestStatus != 'approved')
+                            ? registerSeller
+                            : null,
                       ),
                     ],
                   ),

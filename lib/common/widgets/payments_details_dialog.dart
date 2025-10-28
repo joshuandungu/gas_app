@@ -22,11 +22,11 @@ class PaymentDetailsDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Original Amount: \$${originalAmount.toStringAsFixed(2)}'),
-          Text('Shipping Fee: \$${shippingFee.toStringAsFixed(2)}'),
+          Text('Original Amount: \$ksh{originalAmount.toStringAsFixed(2)}'),
+          Text('Shipping Fee: \$ksh{shippingFee.toStringAsFixed(2)}'),
           const Divider(),
           Text(
-            'Total Amount: \$${totalAmount.toStringAsFixed(2)}',
+            'Total Amount: \$ksh{totalAmount.toStringAsFixed(2)}',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],

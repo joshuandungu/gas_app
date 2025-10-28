@@ -1,9 +1,16 @@
 import 'package:ecommerce_app_fluterr_nodejs/features/account/services/account_services.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/admin_orders_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/best_sellers_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/customer_queries_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/sales_overview_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/system_settings_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/widgets/admin_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/seller_requests_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/sellers_screen.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/admin/screens/users_screen.dart';
 
 class AdminScreen extends StatefulWidget {
   static const String routeName = '/admin-screen';
@@ -21,7 +28,10 @@ class _AdminScreenState extends State<AdminScreen> {
   List<Widget> pages = [
     const SellerRequestsScreen(),
     const SellersScreen(),
+    const UsersScreen(),
     const BestSellersScreen(),
+    const SalesOverviewScreen(),
+    const AdminOrdersScreen(),
   ];
 
   void updatePage(int page) {
@@ -33,6 +43,7 @@ class _AdminScreenState extends State<AdminScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const AdminDrawer(),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(50),
         child: AppBar(
@@ -41,40 +52,10 @@ class _AdminScreenState extends State<AdminScreen> {
               gradient: GlobalVariables.appBarGradient,
             ),
           ),
-          title: Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Admin Dashboard',
-                  style: TextStyle(
-                      color: Colors.black, fontWeight: FontWeight.w800),
-                ),
-              ),
-              PopupMenuButton(
-                icon: const Icon(Icons.menu_rounded),
-                onSelected: (value) {
-                  if (value == 'logout') {
-                    AccountServices().logOut(context);
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'logout',
-                    child: ListTile(
-                      title: Text(
-                        'Log out',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.redAccent,
-                        ),
-                      ),
-                      leading: Icon(Icons.logout),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          title: const Text(
+            'Admin Dashboard',
+            style: TextStyle(
+                color: Colors.black, fontWeight: FontWeight.w800),
           ),
         ),
       ),
@@ -134,9 +115,60 @@ class _AdminScreenState extends State<AdminScreen> {
                   ),
                 ),
               ),
+              child: const Icon(Icons.person),
+            ),
+            label: 'Users',
+          ),
+          BottomNavigationBarItem(
+            icon: Container(
+              width: bottomBarWidth,
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: _page == 3
+                        ? GlobalVariables.selectedNavBarColor
+                        : GlobalVariables.backgroundColor,
+                    width: bottomBarBorderWidth,
+                  ),
+                ),
+              ),
               child: const Icon(Icons.analytics),
             ),
             label: 'Best Sellers',
+          ),
+          BottomNavigationBarItem(
+            icon: Container(
+              width: bottomBarWidth,
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: _page == 4
+                        ? GlobalVariables.selectedNavBarColor
+                        : GlobalVariables.backgroundColor,
+                    width: bottomBarBorderWidth,
+                  ),
+                ),
+              ),
+              child: const Icon(Icons.attach_money),
+            ),
+            label: 'Sales Overview',
+          ),
+          BottomNavigationBarItem(
+            icon: Container(
+              width: bottomBarWidth,
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: _page == 5
+                        ? GlobalVariables.selectedNavBarColor
+                        : GlobalVariables.backgroundColor,
+                    width: bottomBarBorderWidth,
+                  ),
+                ),
+              ),
+              child: const Icon(Icons.shopping_cart),
+            ),
+            label: 'Orders',
           ),
         ],
       ),

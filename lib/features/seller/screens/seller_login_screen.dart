@@ -1,6 +1,7 @@
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_button.dart';
 import 'package:ecommerce_app_fluterr_nodejs/common/widgets/custom_textfield.dart';
 import 'package:ecommerce_app_fluterr_nodejs/constants/global_variables.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/auth/screens/login_selection_screen.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/auth/services/auth_service.dart';
 import 'package:ecommerce_app_fluterr_nodejs/features/seller/screens/seller_register_screen.dart';
 import 'package:flutter/material.dart';
@@ -84,7 +85,8 @@ class _SellerLoginScreenState extends State<SellerLoginScreen> {
                   alignment: Alignment.center,
                   child: TextButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pushNamed(
+                          context, LoginSelectionScreen.routeName);
                     },
                     child: const Text('Not a seller? Go back'),
                   ),

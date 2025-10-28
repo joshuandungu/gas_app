@@ -4,11 +4,14 @@ const authRouter = express.Router();
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const auth = require("../middlewares/auth");
+const config = require("../config/config.js");
+const { sendEmail } = require("../utils/email");
+const crypto = require("crypto");
 
 // SIGN UP
 authRouter.post("/api/signup", async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, latitude, longitude, phoneNumber } = req.body;
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ msg: "Email address already exists" });
@@ -17,14 +20,30 @@ authRouter.post("/api/signup", async (req, res) => {
             return res.status(400).json({ msg: "Password must be at least 6 characters" });
         }
         const hashedPassword = await bcryptjs.hash(password, 8);
+
+        // Generate a random 6-digit verification code
+        const verificationCode = crypto.randomInt(100000, 999999).toString();
+
         let user = new User({
             email,
             password: hashedPassword,
             name,
             type: role || 'user',
+            isEmailVerified: false,
+            emailVerificationCode: verificationCode,
+            status: "active",
+            latitude: latitude,
+            longitude: longitude,
+            phoneNumber: phoneNumber,
         });
         user = await user.save();
-        res.json(user);
+
+        // Send verification code email
+        const subject = "Your Email Verification Code";
+        const text = `Your verification code is: ${verificationCode}`;
+        await sendEmail(email, subject, text);
+
+        res.json({ _id: user._id, msg: "User registered successfully. Please check your email for verification code." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -39,6 +58,7 @@ authRouter.post("/api/signin", async (req, res) => {
         if (!user) {
             return res.status(400).json({ msg: "User with this email does not exist!" });
         }
+
         if (role && user.type !== role) {
             return res.status(400).json({ msg: `This account is not registered as a ${role}.` });
         }
@@ -46,7 +66,12 @@ authRouter.post("/api/signin", async (req, res) => {
         if (!isMatch) {
             return res.status(400).json({ msg: "Incorrect password!" });
         }
-        const token = jwt.sign({ id: user._id }, "passwordKey");
+
+        if (!user.isEmailVerified) {
+            return res.status(400).json({ msg: "Please verify your email before signing in." });
+        }
+
+        const token = jwt.sign({ id: user._id }, config.JWT_SECRET);
         res.json({ token, ...user._doc });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -58,7 +83,7 @@ authRouter.post("/tokenIsValid", async (req, res) => {
     try {
         const token = req.header("x-auth-token");
         if (!token) return res.json(false);
-        const verified = jwt.verify(token, "passwordKey");
+        const verified = jwt.verify(token, config.JWT_SECRET);
         if (!verified) return res.json(false);
         const user = await User.findById(verified.id);
         if (!user) return res.json(false);
@@ -86,7 +111,7 @@ authRouter.post("/api/reset-password", async (req, res) => {
 
         const resetToken = jwt.sign(
             { id: user._id },
-            "passwordResetKey",
+            config.JWT_RESET_SECRET,
             { expiresIn: '1h' }
         );
 
@@ -104,7 +129,7 @@ authRouter.post("/api/update-password", async (req, res) => {
             return res.status(400).json({ msg: "Password must be at least 6 characters" });
         }
 
-        const verified = jwt.verify(resetToken, "passwordResetKey");
+        const verified = jwt.verify(resetToken, config.JWT_RESET_SECRET);
         if (!verified) {
             return res.status(400).json({ msg: "Invalid or expired reset token" });
         }
@@ -116,6 +141,58 @@ authRouter.post("/api/update-password", async (req, res) => {
         );
 
         res.json({ msg: "Password updated successfully" });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+authRouter.post("/api/verify-email", async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ msg: "User with this email does not exist!" });
+        }
+        if (user.isEmailVerified) {
+            return res.status(400).json({ msg: "Email is already verified." });
+        }
+        if (user.emailVerificationCode !== code) {
+            return res.status(400).json({ msg: "Invalid verification code." });
+        }
+        user.isEmailVerified = true;
+        user.emailVerificationCode = null;
+        await user.save();
+        res.json({ msg: "Email verified successfully." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+authRouter.post("/api/resend-verification-code", async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({ msg: "This email is not registered!" });
+        }
+
+        if (user.isEmailVerified) {
+            return res.status(400).json({ msg: "This email is already verified." });
+        }
+
+        // Generate a new 6-digit verification code
+        const verificationCode = crypto.randomInt(100000, 999999).toString();
+        user.emailVerificationCode = verificationCode;
+        await user.save();
+
+        // Send verification code email
+        const subject = "Your New Email Verification Code";
+        const text = `Your new verification code is: ${verificationCode}`;
+        await sendEmail(email, subject, text);
+
+        res.json({ msg: "Verification code has been resent successfully!" });
+
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

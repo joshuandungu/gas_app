@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
-const { productSchema } = require('./product');
 
 const orderSchema = mongoose.Schema({
     products: [
         {
-            product: productSchema,
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Product',
+                required: true,
+            },
             quantity: {
                 type: Number,
                 required: true,
@@ -31,6 +34,10 @@ const orderSchema = mongoose.Schema({
         type: Number,
         default: 0,
     },
+    cancelled: {
+        type: Boolean,
+        default: false,
+    },
     paymentMethod: {
         type: String,
         default: 'COD',
@@ -42,6 +49,10 @@ const orderSchema = mongoose.Schema({
     phoneNumber: {
         type: String,
         required: true,
+    },
+    paymentDetails: {
+        type: Object,
+        default: {},
     },
 });
 

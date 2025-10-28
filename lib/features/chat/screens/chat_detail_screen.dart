@@ -1,0 +1,334 @@
+import 'package:flutter/material.dart';
+import 'package:ecommerce_app_fluterr_nodejs/constants/utils.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/chat/services/chat_service.dart';
+import 'package:ecommerce_app_fluterr_nodejs/features/chat/models/message.dart';
+import 'package:ecommerce_app_fluterr_nodejs/models/user.dart';
+import 'package:ecommerce_app_fluterr_nodejs/providers/user_provider.dart';
+import 'package:provider/provider.dart';
+
+class ChatDetailScreen extends StatefulWidget {
+  static const String routeName = '/chat-detail';
+  final String chatRoomId;
+  final String receiverName;
+  final User receiver;
+
+  const ChatDetailScreen({
+    Key? key,
+    required this.chatRoomId,
+    required this.receiverName,
+    required this.receiver,
+  }) : super(key: key);
+
+  @override
+  State<ChatDetailScreen> createState() => _ChatDetailScreenState();
+}
+
+class _ChatDetailScreenState extends State<ChatDetailScreen> {
+  final ChatService _chatService = ChatService();
+  final TextEditingController _messageController = TextEditingController();
+  final List<Message> _messages = []; // This will hold messages
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMessages();
+    _resetUnreadCount();
+    _chatService.connect(context);
+    _chatService.joinRoom(widget.chatRoomId);
+
+    _chatService.listenForMessages((data) {
+      if (mounted) {
+        final user = Provider.of<UserProvider>(context, listen: false).user;
+        // If the received message is from the current user,
+        // remove the temporary optimistic message and add the real one from the server.
+        final tempMessageId = data.tempId;
+        if (data.senderId == user.id && tempMessageId != null) {
+          setState(() {
+            // Find the index of the temporary message and replace it
+            final index = _messages.indexWhere((msg) => msg.id == tempMessageId);
+            if (index != -1) {
+              _messages[index] = data;
+            }
+          });
+        } else {
+          setState(() {
+            _messages.add(data); // Add message from the other user
+          });
+        }
+      }
+    });
+  }
+
+  void _fetchMessages() async {
+    var fetchedMessages = await _chatService.getChatMessages(
+        context: context, chatRoomId: widget.chatRoomId);
+    setState(() {
+      _messages.addAll(fetchedMessages);
+      _isLoading = false;
+    });
+  }
+
+  void _resetUnreadCount() async {
+    await _chatService.getOrCreateChatRoom(
+        context: context, receiverId: widget.receiver.id);
+    _chatService.emitChatListUpdate();
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _chatService.dispose();
+    super.dispose();
+  }
+
+  void _sendMessage() {
+    if (_messageController.text.isNotEmpty) {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+
+      // Generate a unique temporary ID for optimistic update
+      final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Add the message to the UI instantly
+      final tempMessage = Message(
+        id: tempId, // Use the unique temporary ID
+        chatRoomId: widget.chatRoomId,
+        senderId: user.id,
+        text: _messageController.text,
+        createdAt: DateTime.now(),
+      );
+
+      setState(() {
+        _messages.add(tempMessage);
+      });
+
+      // Send the message to the server
+      _chatService.sendMessage(
+        chatRoomId: widget.chatRoomId,
+        text: _messageController.text,
+        senderId: user.id,
+        receiverId: widget.receiver.id,
+        tempId: tempId, // Pass the temporary ID to the server
+      );
+      _messageController.clear();
+    }
+  }
+
+  void _deleteChat() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Conversation'),
+        content: const Text('Are you sure you want to delete this conversation?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _chatService.deleteChat(
+        context: context,
+        chatRoomId: widget.chatRoomId,
+      );
+      if (mounted) {
+        Navigator.of(context).pop(); // Go back to chat list
+      }
+    }
+  }
+
+  void _deleteMessage(String messageId) async {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    try {
+      await _chatService.deleteMessage(
+        context: context,
+        messageId: messageId,
+      );
+      setState(() {
+        _messages.removeWhere((msg) => msg.id == messageId);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Message deleted')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete message: $e')),
+      );
+    }
+  }
+
+  void _showImageDialog(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Image.network(imageUrl),
+      ),
+    );
+  }
+
+  void _pickAndSendImage() async {
+    final pickedImage = await pickImage();
+    if (pickedImage != null) {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+
+      // Generate a unique temporary ID for optimistic update
+      final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Add the message to the UI instantly
+      final tempMessage = Message(
+        id: tempId,
+        chatRoomId: widget.chatRoomId,
+        senderId: user.id,
+        text: '',
+        createdAt: DateTime.now(),
+        imageUrl: '', // Will be updated after upload
+      );
+
+      setState(() {
+        _messages.add(tempMessage);
+      });
+
+      // Upload image to Cloudinary
+      final imageUrl = await _chatService.uploadImage(
+        pickedImage,
+        'chat_images',
+      );
+
+      if (imageUrl != null) {
+        // Send the message with image URL
+        _chatService.sendMessage(
+          chatRoomId: widget.chatRoomId,
+          text: '',
+          senderId: user.id,
+          receiverId: widget.receiver.id,
+          tempId: tempId,
+          imageUrl: imageUrl,
+        );
+      } else {
+        // Remove the temporary message if upload failed
+        setState(() {
+          _messages.removeWhere((msg) => msg.id == tempId);
+        });
+        showSnackBar(context, 'Failed to upload image');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.receiverName),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _deleteChat,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      final isMe = message.senderId == user.id;
+                      return Dismissible(
+                        key: Key(message.id),
+                        direction: isMe ? DismissDirection.endToStart : DismissDirection.none,
+                        confirmDismiss: (direction) async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Message'),
+                              content: const Text('Are you sure you want to delete this message?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(true),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                          return confirm == true;
+                        },
+                        onDismissed: (direction) {
+                          _deleteMessage(message.id);
+                        },
+                        background: Container(
+                          color: Colors.red,
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        child: Align(
+                          alignment:
+                              isMe ? Alignment.centerRight : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isMe ? Colors.blue[200] : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: message.imageUrl != null
+                                ? GestureDetector(
+                                    onTap: () => _showImageDialog(message.imageUrl!),
+                                    child: Image.network(
+                                      message.imageUrl!,
+                                      width: 200,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Text(message.text),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration:
+                        const InputDecoration(hintText: 'Type a message...'),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.image),
+                  onPressed: _pickAndSendImage,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: _sendMessage,
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
